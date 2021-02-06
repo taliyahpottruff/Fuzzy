@@ -1,0 +1,6 @@
+__pycache__
+fuzzy.cfg
+fuzzy.db
+dist
+.vscode
+.idea
