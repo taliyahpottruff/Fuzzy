@@ -11,7 +11,7 @@ import discord
 from discord.ext import commands
 
 from fuzzy.fuzzy import Fuzzy, AnticipatedError, Unauthorized, PleaseRestate
-from fuzzy.interfaces import IDatabase
+from fuzzy.interfaces import Database
 from . import cogs
 
 config = ConfigParser()
@@ -29,7 +29,7 @@ for source in config["log"]["suppress"].split(","):
 intents = discord.Intents.default()
 intents.members = True
 
-database: IDatabase = None
+database: Database = None
 
 bot = Fuzzy(config,
             database,

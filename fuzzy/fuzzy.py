@@ -7,7 +7,7 @@ import discord
 from discord.ext import commands
 from discord import Activity, ActivityType
 
-from fuzzy.interfaces import IDatabase
+from fuzzy.interfaces import Database
 
 
 class AnticipatedError(Exception):
@@ -56,7 +56,7 @@ class Fuzzy(commands.Bot):
             return self.cog.log.getChild(name)
 
         @property
-        def db(self) -> IDatabase:
+        def db(self) -> Database:
             """Return the bot's database connection."""
             return self.bot.db
 
@@ -134,7 +134,7 @@ class Fuzzy(commands.Bot):
             self.bot = bot
             self.log = bot.log.getChild(self.__class__.__name__)
 
-    def __init__(self, config, database: IDatabase, **kwargs):
+    def __init__(self, config, database: Database, **kwargs):
         self.config = config
         self.db = database
 

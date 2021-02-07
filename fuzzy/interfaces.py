@@ -88,14 +88,14 @@ class ILocks(ABC):
         pass
 
 
-class IDatabase(ABC):
-
+class Database(ABC):
     @abstractmethod
     def __init__(self , config, schema_file: TextIO):
+
         self.conn: sqlite3.Connection
-        self.infractions: IInfractions
-        self.pardons: IPardons
-        self.mutes: IMutes
-        self.guilds: IGuilds
-        self.locks: ILocks
+        self.infractions: IInfractions = IInfractions()
+        self.pardons: IPardons = IPardons()
+        self.mutes: IMutes = IMutes()
+        self.guilds: IGuilds = IGuilds()
+        self.locks: ILocks = ILocks()
 
