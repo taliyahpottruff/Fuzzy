@@ -1,6 +1,6 @@
 import sqlite3
 from abc import ABC, abstractmethod
-from typing import TextIO
+from typing import TextIO, List
 
 from fuzzy.models import *
 
@@ -39,7 +39,7 @@ class IMutes(ABC):
         pass
 
     @abstractmethod
-    def find_expired_mutes(self) -> Mute:
+    def find_expired_mutes(self) -> List[Mute]:
         pass
 
     @abstractmethod
@@ -48,6 +48,10 @@ class IMutes(ABC):
 
     @abstractmethod
     def delete(self, infraction_id: int) -> None:
+        pass
+
+    @abstractmethod
+    def find_active_mute(self, user_id, guild_id) -> Mute:
         pass
 
 

@@ -5,9 +5,6 @@ from fuzzy.models import *
 
 
 class InfractionAdmin(Fuzzy.Cog):
-    def __init__(self, *args):
-        super().__init__(*args)
-
     @commands.command()
     async def pardon(self, ctx: Fuzzy.Context, infraction_ids: commands.Greedy[int]):
         """Pardon a user's infraction. This will leave the infraction in the logs but will mark it as pardoned.
@@ -63,6 +60,10 @@ class InfractionAdmin(Fuzzy.Cog):
                 msg += f"**ID:** {infraction.id} **User:** {infraction.user.name}\n"
 
             await ctx.reply(title="Pardoned", msg=msg, color=ctx.Color.GOOD)
+            await self.bot.post_log(
+                ctx.guild,
+                msg=f"{ctx.author.name}#{ctx.author.discriminator} " f"pardoned: {msg}",
+            )
 
     @commands.command()
     async def forget(self, ctx: Fuzzy.Context, infraction_ids: commands.Greedy[int]):
@@ -96,6 +97,11 @@ class InfractionAdmin(Fuzzy.Cog):
                 msg += f"**ID:** {infraction.id} **User:** {infraction.user.name}\n"
 
             await ctx.reply(title="Forgot", msg=msg, color=ctx.Color.GOOD)
+            await self.bot.post_log(
+                ctx.guild,
+                msg=f"{ctx.author.name}#{ctx.author.discriminator} ordered {self.bot.user.display_name} to forget:\n"
+                f"{msg}",
+            )
 
     @commands.command()
     async def reason(
@@ -146,6 +152,10 @@ class InfractionAdmin(Fuzzy.Cog):
             for infraction in all_infractions:
                 msg += f"{infraction.id} "
             await ctx.reply(f"**Updated Reason to {reason} for: {msg}")
+            await self.bot.post_log(
+                ctx.guild,
+                msg=f"{ctx.author.name}#{ctx.author.discriminator} updated reason to {reason} of {msg}",
+            )
 
     @commands.command()
     async def publish(self, ctx: Fuzzy.Context, infraction_ids: commands.Greedy[int]):
@@ -213,8 +223,17 @@ class InfractionAdmin(Fuzzy.Cog):
                 msg += "\n"
             if all_published_bans:
                 msg += "Successfully published the following bans:"
+                bans = ""
                 for ban in all_published_bans:
                     msg += f" {ban.infraction_id}"
+                    bans += f"{ban.infraction_id} "
+
+                await self.bot.post_log(
+                    ctx.guild,
+                    msg=f"{ctx.author.name}#{ctx.author.discriminator} published ban reason of: {bans}",
+                    color=ctx.Color.AUTOMATIC_BLUE,
+                )
+
             await ctx.reply(msg, color=ctx.Color.AUTOMATIC_BLUE)
 
     @staticmethod

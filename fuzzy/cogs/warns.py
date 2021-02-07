@@ -8,9 +8,6 @@ from fuzzy.models import Infraction, InfractionType
 
 
 class Warns(Fuzzy.Cog):
-    def __init__(self, *args):
-        super().__init__(*args)
-
     @commands.command()
     async def warn(
         self,
@@ -19,9 +16,9 @@ class Warns(Fuzzy.Cog):
         reason: Optional[str] = "",
     ):
         """Issue a warning to a user.
-        'who' is space-separated list of discord users that are to be warned. This can be an ID, a user mention, or
-        their name
-        'reason' is the reason why they are being warned. This is optional and can be updated
+        `who` is space-separated list of discord users that are to be warned. This can be an ID, a user mention, or
+        their name.
+        `reason` is the reason why they are being warned. This is optional and can be updated
         later with `${pfx}reason`"""
         warned_members = []
         for member in who:  # type: discord.Member
@@ -34,5 +31,11 @@ class Warns(Fuzzy.Cog):
         await ctx.reply(
             title="Warning",
             msg=f"**Reason:** {reason}\n" f"{warn_string}",
+            color=ctx.Color.I_GUESS,
+        )
+        await self.bot.post_log(
+            ctx.guild,
+            msg=f"{ctx.author.name}#{ctx.author.discriminator} "
+            f"warned {warn_string} for {reason}",
             color=ctx.Color.I_GUESS,
         )

@@ -87,6 +87,7 @@ class Infraction(object):
 class Mute(object):
     infraction: Infraction
     end_time: datetime
+    user: DBUser
 
 
 @dataclass()

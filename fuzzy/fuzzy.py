@@ -1,6 +1,8 @@
 import enum
 import logging
 import random
+import re
+from datetime import timedelta
 from typing import Union
 
 import discord
@@ -136,12 +138,12 @@ class Fuzzy(commands.Bot):
         """
 
         def __init__(self, bot):
-            self.bot = bot
+            self.bot: Fuzzy = bot
             self.log = bot.log.getChild(self.__class__.__name__)
 
     def __init__(self, config, database: Database, **kwargs):
         self.config = config
-        self.db = database
+        self.db: Database = database
 
         self.log = logging.getLogger("Fuzzy")
         self.log.setLevel(logging.INFO)
@@ -157,3 +159,43 @@ class Fuzzy(commands.Bot):
                 Activity(type=ActivityType.listening, name="to those with power.",),
             ]
         )
+
+    async def post_log(self, guild: discord.Guild, *args, **kwargs):
+        "Post a log entry to a guild, usage same as ctx.reply"
+        configuration = self.db.guilds.find_by_id(guild.id)
+        if not configuration:
+            return
+
+        channel = self.get_channel(configuration.mod_log)
+        await self.Context.reply(self.get_channel(channel), *args, **kwargs)
+
+
+class ParseableTimedelta(timedelta):
+    """Just timedelta but with support for the discordpy converter thing."""
+
+    @classmethod
+    async def convert(cls, _ctx: Fuzzy.Context, argument: str):
+        """
+        Convert a string in the form [NNNd] [NNNh] [NNNm] [NNNs] into a
+        timedelta.
+        """
+
+        delta = cls()
+
+        daysm = re.search(r"(\d+) ?d(ays?)?", argument)
+        if daysm:
+            delta += cls(days=int(daysm[1]))
+
+        hoursm = re.search(r"(\d+) ?h(ours?)?", argument)
+        if hoursm:
+            delta += cls(hours=int(hoursm[1]))
+
+        minsm = re.search(r"(\d+) ?m((inutes?)?|(ins?)?)?", argument)
+        if minsm:
+            delta += cls(minutes=int(minsm[1]))
+
+        secsm = re.search(r"(\d+) ?s((econds?)?|(ecs?)?)?", argument)
+        if secsm:
+            delta += cls(seconds=int(secsm[1]))
+
+        return delta
