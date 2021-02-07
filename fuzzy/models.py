@@ -61,18 +61,26 @@ class Infraction(object):
     published_ban: PublishedBan
 
     @classmethod
-    def create(cls, ctx: Fuzzy.Context, who: discord.Member, reason: str, infraction_type: InfractionType):
+    def create(
+        cls,
+        ctx: Fuzzy.Context,
+        who: discord.Member,
+        reason: str,
+        infraction_type: InfractionType,
+    ):
         """Creates a new Infraction ready to be stored in DB.
-        This will not have id pardon or published_ban attributes. Use normal constructor if those are requred"""
-        return cls(None,
-                   DBUser(who.id, f"{who.name}#{who.discriminator}"),
-                   DBUser(ctx.author.id, f"{ctx.author.name}#{ctx.author.discriminator}"),
-                   ctx.guild.id,
-                   reason,
-                   datetime.utcnow(),
-                   infraction_type,
-                   None,
-                   None)
+        This will not have id pardon or published_ban attributes. Use normal constructor if those are required"""
+        return cls(
+            None,
+            DBUser(who.id, f"{who.name}#{who.discriminator}"),
+            DBUser(ctx.author.id, f"{ctx.author.name}#{ctx.author.discriminator}"),
+            ctx.guild.id,
+            reason,
+            datetime.utcnow(),
+            infraction_type,
+            None,
+            None,
+        )
 
 
 @dataclass()

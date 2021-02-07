@@ -4,8 +4,8 @@ import random
 from typing import Union
 
 import discord
-from discord.ext import commands
 from discord import Activity, ActivityType
+from discord.ext import commands
 
 from fuzzy.interfaces import Database
 
@@ -16,16 +16,19 @@ class AnticipatedError(Exception):
 
 class UnableToComply(AnticipatedError):
     """We understood what the user wants, but can't."""
+
     TEXT = "Unable to comply."
 
 
 class Unauthorized(AnticipatedError):
     """We understood what the user wants, but they aren't allowed to do it."""
+
     TEXT = "Unauthorized."
 
 
 class PleaseRestate(AnticipatedError):
     """We didn't understand what the user wants."""
+
     TEXT = "Please restate query."
 
 
@@ -41,6 +44,7 @@ class Fuzzy(commands.Bot):
 
         class Color(enum.IntEnum):
             """Colors used by Fuzzy."""
+
             GOOD = 0x7DB358
             I_GUESS = 0xF9AE36
             BAD = 0xD52D48
@@ -61,13 +65,13 @@ class Fuzzy(commands.Bot):
             return self.bot.db
 
         async def reply(
-                self,
-                msg: str = None,
-                title: str = discord.Embed.Empty,
-                subtitle: str = None,
-                color: Color = Color.GOOD,
-                embed: discord.Embed = None,
-                delete_after: float = None,
+            self,
+            msg: str = None,
+            title: str = discord.Embed.Empty,
+            subtitle: str = None,
+            color: Color = Color.GOOD,
+            embed: discord.Embed = None,
+            delete_after: float = None,
         ):
             """Helper for sending embedded replies"""
             if not embed:
@@ -101,10 +105,10 @@ class Fuzzy(commands.Bot):
             return await self.send("", embed=embed, delete_after=delete_after)
 
         def privileged_modify(
-                self,
-                subject: Union[
-                    discord.TextChannel, discord.Member, discord.Guild, discord.Role
-                ],
+            self,
+            subject: Union[
+                discord.TextChannel, discord.Member, discord.Guild, discord.Role
+            ],
         ) -> bool:
             """
             Check if the context's user can do privileged actions on the subject.
@@ -121,7 +125,7 @@ class Fuzzy(commands.Bot):
                 return self.author.guild_permissions.manage_guild
             if kind == discord.Role:
                 return self.author.guild_permissions.manage_roles and (
-                        self.author.top_role > subject or self.guild.owner == self.author
+                    self.author.top_role > subject or self.guild.owner == self.author
                 )
 
             raise ValueError(f"unsupported subject {kind}")
@@ -130,6 +134,7 @@ class Fuzzy(commands.Bot):
         """
         A cog with a logger attached to it.
         """
+
         def __init__(self, bot):
             self.bot = bot
             self.log = bot.log.getChild(self.__class__.__name__)
@@ -149,9 +154,6 @@ class Fuzzy(commands.Bot):
         return random.choice(
             [
                 Activity(type=ActivityType.watching, name="and eating donuts."),
-                Activity(
-                    type=ActivityType.listening,
-                    name="to those with power.",
-                ),
+                Activity(type=ActivityType.listening, name="to those with power.",),
             ]
         )

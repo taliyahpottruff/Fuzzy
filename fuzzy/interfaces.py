@@ -6,7 +6,6 @@ from fuzzy.models import *
 
 
 class IInfractions(ABC):
-
     @abstractmethod
     def find_by_id(self, infraction_id: int, guild_id: int) -> Infraction:
         pass
@@ -21,7 +20,6 @@ class IInfractions(ABC):
 
 
 class IPardons(ABC):
-
     @abstractmethod
     def find_by_id(self, infraction_id: int) -> Pardon:
         pass
@@ -36,7 +34,6 @@ class IPardons(ABC):
 
 
 class IMutes(ABC):
-
     @abstractmethod
     def find_by_id(self, infraction_id: int) -> Mute:
         pass
@@ -55,7 +52,6 @@ class IMutes(ABC):
 
 
 class IGuilds(ABC):
-
     @abstractmethod
     def find_by_id(self, guild_id: int) -> GuildSettings:
         pass
@@ -70,7 +66,6 @@ class IGuilds(ABC):
 
 
 class ILocks(ABC):
-
     @abstractmethod
     def find_by_id(self, channel_id: int) -> Lock:
         pass
@@ -89,7 +84,6 @@ class ILocks(ABC):
 
 
 class IPublishedBans(ABC):
-
     @abstractmethod
     def find_by_id(self, infraction_id: int) -> PublishedBan:
         pass
@@ -105,7 +99,7 @@ class IPublishedBans(ABC):
 
 class Database(ABC):
     @abstractmethod
-    def __init__(self , config, schema_file: TextIO):
+    def __init__(self, config, schema_file: TextIO):
 
         self.conn: sqlite3.Connection
         self.infractions: IInfractions = IInfractions()
@@ -114,4 +108,3 @@ class Database(ABC):
         self.guilds: IGuilds = IGuilds()
         self.locks: ILocks = ILocks()
         self.published_bans: IPublishedBans = IPublishedBans()
-

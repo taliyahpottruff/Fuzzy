@@ -31,17 +31,15 @@ intents.members = True
 
 database: Database = None
 
-bot = Fuzzy(config,
-            database,
-            case_insensitive=True,
-            activity=Fuzzy.random_status(),
-            help_command=None,
-            intents=intents,
-            )
-for cog in [
-    cogs.Warns,
-    cogs.InfractionAdmin
-]:
+bot = Fuzzy(
+    config,
+    database,
+    case_insensitive=True,
+    activity=Fuzzy.random_status(),
+    help_command=None,
+    intents=intents,
+)
+for cog in [cogs.Warns, cogs.InfractionAdmin]:
     bot.add_cog(cog(bot))
 
 
@@ -114,9 +112,7 @@ async def _help(ctx: Fuzzy.Context, *, subject: Optional[str]):
             if cmd.__class__ == commands.Command:
                 all_commands += f"`{cmd.qualified_name}` "
 
-        embed.add_field(
-            name="All Commands", value=all_commands
-        )
+        embed.add_field(name="All Commands", value=all_commands)
 
     else:
         for command in ctx.bot.walk_commands():
@@ -167,9 +163,7 @@ async def on_command_error(ctx, error):
         return
     elif isinstance(error, commands.UserInputError):
         await ctx.reply(
-            str(error),
-            title=PleaseRestate.TEXT,
-            color=ctx.Color.BAD,
+            str(error), title=PleaseRestate.TEXT, color=ctx.Color.BAD,
         )
         return
     elif isinstance(error, commands.CommandNotFound):
@@ -180,8 +174,7 @@ async def on_command_error(ctx, error):
             (error_int.bit_length() + 7) // 8, byteorder="little"
         )
         error_id = str(
-            base64.urlsafe_b64encode(error_bytes),
-            encoding="utf-8",
+            base64.urlsafe_b64encode(error_bytes), encoding="utf-8",
         ).replace("=", "")
 
         ctx.log.error(
