@@ -39,7 +39,8 @@ bot = Fuzzy(config,
             intents=intents,
             )
 for cog in [
-    cogs.Warns
+    cogs.Warns,
+    cogs.InfractionAdmin
 ]:
     bot.add_cog(cog(bot))
 

@@ -14,6 +14,11 @@ class InfractionAdmin(Fuzzy.Cog):
     async def pardon(self,
                      ctx: Fuzzy.Context,
                      infraction_ids: commands.Greedy[int]):
+        """Pardon a user's infraction. This will leave the infraction in the logs but will mark it as pardoned.
+        This command cannot pardon bans as those will automatically be pardoned when a user is unbanned.
+
+        'infraction_ids' is a space-separated list of Infraction IDs that are to be pardoned
+        """
         all_infractions = []
         all_errors = []
         all_bans = []
@@ -31,7 +36,7 @@ class InfractionAdmin(Fuzzy.Cog):
 
         for infraction in all_infractions:
             pardon = Pardon(infraction.id,
-                            DBUser(ctx.author.id,f"{ctx.author.name}#{ctx.author.discriminator}"),
+                            DBUser(ctx.author.id, f"{ctx.author.name}#{ctx.author.discriminator}"),
                             datetime.utcnow())
             pardon = ctx.db.pardons.save(pardon)
             if pardon is not None:
@@ -58,6 +63,10 @@ class InfractionAdmin(Fuzzy.Cog):
     async def forget(self,
                      ctx: Fuzzy.Context,
                      infraction_ids: commands.Greedy[int]):
+        """Forgets a user's infraction. This will permanently remove the infraction from the logs.
+
+        'infraction_ids' is a space-separated list of Infraction IDs that are to be forgotten.
+        """
         all_infractions = []
         all_errors = []
         for infraction_id in infraction_ids:
@@ -88,6 +97,11 @@ class InfractionAdmin(Fuzzy.Cog):
                      ctx: Fuzzy.Context,
                      infraction_ids: commands.Greedy[int],
                      reason: str):
+        """Updates the reason of a user's infraction.
+
+        'infraction_ids' is a space-separated list of Infraction IDs that are to have their reasons updated.
+        'reason' is the new reason to be saved to these infractions
+        """
         all_infractions = []
         all_errors = []
         for infraction_id in infraction_ids:

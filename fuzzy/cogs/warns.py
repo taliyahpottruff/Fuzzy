@@ -18,6 +18,11 @@ class Warns(Fuzzy.Cog):
                    ctx: Fuzzy.Context,
                    who: commands.Greedy[discord.Member],
                    reason: Optional[str] = ""):
+        """Issue a warning to a user.
+        'who' is space-separated list of discord users that are to be warned. This can be an ID, a user mention, or
+        their name
+        'reason' is the reason why they are being warned. This is optional and can be updated
+        later with `$pfxreason`"""
         warned_members = []
         for member in who:  # type: discord.Member
             infraction = Infraction(None,
