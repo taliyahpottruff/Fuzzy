@@ -8,7 +8,7 @@ from fuzzy.models import *
 class IInfractions(ABC):
 
     @abstractmethod
-    def find_by_id(self, infraction_id: int) -> Infraction:
+    def find_by_id(self, infraction_id: int, guild_id: int) -> Infraction:
         pass
 
     @abstractmethod
@@ -61,7 +61,7 @@ class IGuilds(ABC):
         pass
 
     @abstractmethod
-    def save(self, pardon: GuildSettings) -> GuildSettings:
+    def save(self, guild: GuildSettings) -> GuildSettings:
         pass
 
     @abstractmethod
@@ -88,6 +88,21 @@ class ILocks(ABC):
         pass
 
 
+class IPublishedBans(ABC):
+
+    @abstractmethod
+    def find_by_id(self, infraction_id: int) -> PublishedBan:
+        pass
+
+    @abstractmethod
+    def save(self, published_ban: PublishedBan) -> PublishedBan:
+        pass
+
+    @abstractmethod
+    def delete(self, guild_id: int) -> None:
+        pass
+
+
 class Database(ABC):
     @abstractmethod
     def __init__(self , config, schema_file: TextIO):
@@ -98,4 +113,5 @@ class Database(ABC):
         self.mutes: IMutes = IMutes()
         self.guilds: IGuilds = IGuilds()
         self.locks: ILocks = ILocks()
+        self.published_bans: IPublishedBans = IPublishedBans()
 

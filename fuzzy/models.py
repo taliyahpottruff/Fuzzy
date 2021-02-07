@@ -2,6 +2,10 @@ from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
 
+import discord
+
+from fuzzy import Fuzzy
+
 
 class DurationType(Enum):
     DAYS = 1
@@ -17,8 +21,6 @@ class InfractionType(Enum):
 
 @dataclass
 class GuildSettings(object):
-
-
     id: int
     mod_log: int
     public_log: int
@@ -41,6 +43,12 @@ class Pardon(object):
 
 
 @dataclass()
+class PublishedBan(object):
+    infraction_id: int
+    message_id: int
+
+
+@dataclass()
 class Infraction(object):
     id: int
     user: DBUser
@@ -50,6 +58,21 @@ class Infraction(object):
     infraction_on: datetime
     infraction_type: InfractionType
     pardon: Pardon
+    published_ban: PublishedBan
+
+    @classmethod
+    def create(cls, ctx: Fuzzy.Context, who: discord.Member, reason: str, infraction_type: InfractionType):
+        """Creates a new Infraction ready to be stored in DB.
+        This will not have id pardon or published_ban attributes. Use normal constructor if those are requred"""
+        return cls(None,
+                   DBUser(who.id, f"{who.name}#{who.discriminator}"),
+                   DBUser(ctx.author.id, f"{ctx.author.name}#{ctx.author.discriminator}"),
+                   ctx.guild.id,
+                   reason,
+                   datetime.utcnow(),
+                   infraction_type,
+                   None,
+                   None)
 
 
 @dataclass()
