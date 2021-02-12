@@ -1,3 +1,5 @@
+from typing import Optional
+
 from discord.ext import commands
 
 from fuzzy.fuzzy import UnableToComply
@@ -6,7 +8,12 @@ from fuzzy.models import *
 
 class InfractionAdmin(Fuzzy.Cog):
     @commands.command()
-    async def pardon(self, ctx: Fuzzy.Context, infraction_ids: commands.Greedy[int]):
+    async def pardon(
+        self,
+        ctx: Fuzzy.Context,
+        infraction_ids: commands.Greedy[int],
+        reason: Optional[str],
+    ):
         """Pardon a user's infraction. This will leave the infraction in the logs but will mark it as pardoned.
         This command cannot pardon bans as those will automatically be pardoned when a user is unbanned.
 
@@ -14,18 +21,12 @@ class InfractionAdmin(Fuzzy.Cog):
         """
         all_infractions = []
         all_errors = []
-        all_bans = []
         for infraction_id in infraction_ids:
             infraction: Infraction = ctx.db.infractions.find_by_id(
                 infraction_id, ctx.guild.id
             )
-            if (
-                infraction is not None
-                and infraction.infraction_type != InfractionType.BAN
-            ):
+            if not infraction:
                 all_infractions.append(infraction)
-            elif infraction.infraction_type == InfractionType.BAN:
-                all_bans.append(str(infraction.id))
             else:
                 all_errors.append(f"{infraction_id}")
         if not all_infractions:
@@ -37,19 +38,16 @@ class InfractionAdmin(Fuzzy.Cog):
                 infraction.id,
                 DBUser(ctx.author.id, f"{ctx.author.name}#{ctx.author.discriminator}"),
                 datetime.utcnow(),
+                reason,
             )
             pardon = ctx.db.pardons.save(pardon)
-            if pardon is not None:
+            if pardon:
                 infraction.pardon = pardon
                 all_pardons.append(infraction)
             else:
                 all_errors.append(infraction.id)
-        if all_errors or all_bans:
+        if all_errors:
             msg = ""
-            if all_bans:
-                msg += (
-                    "Cannot Pardon Bans, Please use Unban: " + " ".join(all_bans) + "\n"
-                )
             if all_errors:
                 msg += "Error Processing Pardons: " + " ".join(all_errors)
             await ctx.reply(msg, color=ctx.Color.I_GUESS)
@@ -62,7 +60,8 @@ class InfractionAdmin(Fuzzy.Cog):
             await ctx.reply(title="Pardoned", msg=msg, color=ctx.Color.GOOD)
             await self.bot.post_log(
                 ctx.guild,
-                msg=f"{ctx.author.name}#{ctx.author.discriminator} " f"pardoned: {msg}",
+                msg=f"{ctx.author.name}#{ctx.author.discriminator} "
+                f"pardoned: {msg} for {reason}",
             )
 
     @commands.command()
@@ -77,7 +76,7 @@ class InfractionAdmin(Fuzzy.Cog):
             infraction: Infraction = ctx.db.infractions.find_by_id(
                 infraction_id, ctx.guild.id
             )
-            if infraction is not None:
+            if infraction:
                 all_infractions.append(infraction)
             else:
                 all_errors.append(f"{infraction_id}")
@@ -85,7 +84,7 @@ class InfractionAdmin(Fuzzy.Cog):
             raise UnableToComply("Could not find any Infractions with those IDs.")
 
         for infraction in all_infractions:
-            if infraction.pardon is not None:
+            if infraction.pardon:
                 ctx.db.pardons.delete(infraction.id)
             ctx.db.infractions.delete(infraction.id)
         if all_errors:
@@ -119,7 +118,7 @@ class InfractionAdmin(Fuzzy.Cog):
             infraction: Infraction = ctx.db.infractions.find_by_id(
                 infraction_id, ctx.guild.id
             )
-            if infraction is not None:
+            if infraction:
                 all_infractions.append(infraction)
             else:
                 all_errors.append(f"{infraction_id}")
@@ -131,12 +130,12 @@ class InfractionAdmin(Fuzzy.Cog):
             ctx.db.infractions.save(infraction)
             if (
                 infraction.infraction_type == InfractionType.BAN
-                and infraction.published_ban is not None
+                and infraction.published_ban
             ):
                 message: discord.Message = ctx.author.fetch_message(
                     infraction.published_ban.message_id
                 )
-                if message is not None:
+                if message:
                     await message.edit(
                         embed=InfractionAdmin.create_ban_embed(infraction)
                     )
@@ -157,8 +156,12 @@ class InfractionAdmin(Fuzzy.Cog):
                 msg=f"{ctx.author.name}#{ctx.author.discriminator} updated reason to {reason} of {msg}",
             )
 
-    @commands.command()
-    async def publish(self, ctx: Fuzzy.Context, infraction_ids: commands.Greedy[int]):
+    @commands.group()
+    async def publish(self, cts: Fuzzy.Context):
+        """Publishes a ban or unban to the public ban log channel."""
+
+    @commands.command(parent=publish)
+    async def ban(self, ctx: Fuzzy.Context, infraction_ids: commands.Greedy[int]):
         """Publishes a ban to the public ban log channel.
         If ban has already been posted you can use ${pfx}reason to update it.
         'infraction_ids is a space-separated list of infractions"""
@@ -170,10 +173,7 @@ class InfractionAdmin(Fuzzy.Cog):
             infraction: Infraction = ctx.db.infractions.find_by_id(
                 infraction_id, ctx.guild.id
             )
-            if (
-                infraction is not None
-                and infraction.infraction_type == InfractionType.BAN
-            ):
+            if infraction and infraction.infraction_type == InfractionType.BAN:
                 all_bans.append(infraction)
             elif infraction.infraction_type != InfractionType.BAN:
                 all_non_bans.append(str(infraction.id))
@@ -196,8 +196,9 @@ class InfractionAdmin(Fuzzy.Cog):
             await ctx.reply(msg, color=ctx.Color.I_GUESS)
 
         guild: GuildSettings = ctx.db.guilds.find_by_id(ctx.guild.id)
+        # noinspection PyTypeChecker
         channel: discord.TextChannel = None
-        if guild.public_log is not None:
+        if guild.public_log:
             channel = await ctx.bot.fetch_channel(guild.public_log)
         if channel is None:
             await ctx.reply(msg="Error Fetching Public Log Channel")
@@ -207,7 +208,7 @@ class InfractionAdmin(Fuzzy.Cog):
         all_message_errors = []
         for ban in all_bans:
             message = await channel.send(embed=InfractionAdmin.create_ban_embed(ban))
-            if message is not None:
+            if message:
                 all_published_bans.append(
                     ctx.db.published_bans.save(PublishedBan(ban.id, message.id))
                 )
@@ -236,10 +237,105 @@ class InfractionAdmin(Fuzzy.Cog):
 
             await ctx.reply(msg, color=ctx.Color.AUTOMATIC_BLUE)
 
+    @commands.command(parent=publish)
+    async def unban(self, ctx: Fuzzy.Context, infraction_ids: commands.Greedy[int]):
+        all_unbans = []
+        all_unpardoned_bans = []
+        all_non_bans = []
+        all_errors = []
+
+        for infraction_id in infraction_ids:
+            infraction: Infraction = ctx.db.infractions.find_by_id(
+                infraction_id, ctx.guild.id
+            )
+            if (
+                infraction
+                and infraction.infraction_type == InfractionType.BAN
+                and infraction.pardon
+            ):
+                all_unbans.append(infraction)
+            elif infraction.infraction_type != InfractionType.BAN:
+                all_non_bans.append(str(infraction.id))
+            elif not infraction.pardon:
+                all_unpardoned_bans.append(str(infraction.id))
+            else:
+                all_errors.append(str(infraction_id))
+        if all_errors or all_non_bans:
+            msg = ""
+            if all_errors:
+                msg += (
+                    "Could not find infractions with IDs: "
+                    + " ".join(all_errors)
+                    + "\n"
+                )
+            if all_non_bans:
+                msg += (
+                    "These infractions were not bans and therefore not published: "
+                    + " ".join(all_non_bans)
+                    + "\n"
+                )
+            if all_unpardoned_bans:
+                msg += (
+                    f"These bans have not been pardoned. Please use `{self.bot.command_prefix}pardon` first: "
+                    + " ".join(all_unpardoned_bans)
+                    + "\n"
+                )
+            await ctx.reply(msg, color=ctx.Color.I_GUESS)
+
+        guild: GuildSettings = ctx.db.guilds.find_by_id(ctx.guild.id)
+        # noinspection PyTypeChecker
+        channel: discord.TextChannel = None
+        if guild.public_log:
+            channel = await ctx.bot.fetch_channel(guild.public_log)
+        if channel is None:
+            await ctx.reply(msg="Error Fetching Public Log Channel")
+            return
+
+        all_published_unbans = []
+        all_message_errors = []
+        for ban in all_unbans:
+            message = await channel.send(embed=InfractionAdmin.create_unban_embed(ban))
+            if message:
+                all_published_unbans.append(
+                    ctx.db.published_bans.save(PublishedBan(ban.id, message.id))
+                )
+            else:
+                all_message_errors.append(ban)
+
+        if all_published_unbans or all_message_errors:
+            msg = ""
+            if all_message_errors:
+                msg += "Error publishing these unbans:"
+                for error in all_message_errors:
+                    msg += f" {error.id}"
+                msg += "\n"
+            if all_published_unbans:
+                msg += "Successfully published the following unbans:"
+                bans = ""
+                for ban in all_published_unbans:
+                    msg += f" {ban.infraction_id}"
+                    bans += f"{ban.infraction_id} "
+
+                await self.bot.post_log(
+                    ctx.guild,
+                    msg=f"{ctx.author.name}#{ctx.author.discriminator} published ban reason of: {bans}",
+                    color=ctx.Color.AUTOMATIC_BLUE,
+                )
+
+            await ctx.reply(msg, color=ctx.Color.AUTOMATIC_BLUE)
+
     @staticmethod
     def create_ban_embed(infraction: Infraction):
         return discord.Embed(
             description=f"**Date:** {infraction.infraction_on.strftime('%Y-%m-%d')}\n"
             f"**User:** {infraction.user.name}\n"
             f"**Reason:** {infraction.reason}"
+        )
+
+    @staticmethod
+    def create_unban_embed(infraction: Infraction):
+        return discord.Embed(
+            description=f"**Date:** {infraction.pardon.pardon_on.strftime('%Y-%m-%d')}\n"
+            f"**User:** {infraction.user.name}\n"
+            f"**Reason:** {infraction.pardon.reason}"
         )

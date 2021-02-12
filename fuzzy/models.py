@@ -40,6 +40,7 @@ class Pardon(object):
     infraction_id: int
     moderator: DBUser
     pardon_on: datetime
+    reason: str
 
 
 @dataclass()
@@ -70,6 +71,7 @@ class Infraction(object):
     ):
         """Creates a new Infraction ready to be stored in DB.
         This will not have id pardon or published_ban attributes. Use normal constructor if those are required"""
+        # noinspection PyTypeChecker
         return cls(
             None,
             DBUser(who.id, f"{who.name}#{who.discriminator}"),

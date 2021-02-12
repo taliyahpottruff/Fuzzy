@@ -18,6 +18,10 @@ class IInfractions(ABC):
     def delete(self, infraction_id: int) -> None:
         pass
 
+    @abstractmethod
+    def find_recent_ban_by_id(self, user_id, guild_id) -> Infraction:
+        pass
+
 
 class IPardons(ABC):
     @abstractmethod

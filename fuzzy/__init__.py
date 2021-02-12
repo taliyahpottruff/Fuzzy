@@ -29,6 +29,7 @@ for source in config["log"]["suppress"].split(","):
 intents = discord.Intents.default()
 intents.members = True
 
+# noinspection PyTypeChecker
 database: Database = None
 
 bot = Fuzzy(
@@ -82,6 +83,7 @@ async def on_ready():
 async def _help(ctx: Fuzzy.Context, *, subject: Optional[str]):
     """Display the usage of commands."""
 
+    # noinspection PyShadowingNames
     def signature(cmd: commands.Command) -> str:
         out = f"`{cmd.qualified_name}"
         if cmd.signature:

@@ -25,11 +25,11 @@ class Mutes(Fuzzy.Cog):
             user: discord.Member = None
             # noinspection PyTypeChecker
             mute_role: discord.Role = None
-            if guild is not None:
+            if guild:
                 user = guild.get_member(mute.user.id)
                 mute_role = guild.get_role(mute.infraction.guild.mute_role)
 
-            if user is not None and mute_role is not None:
+            if user and mute_role:
                 await user.remove_roles(mute_role)
                 self.bot.db.mutes.delete(mute.infraction.id)
                 unmuted_users.append(user)
@@ -65,13 +65,13 @@ class Mutes(Fuzzy.Cog):
         for member in who:  # type: discord.Member
 
             active_mute = ctx.db.mutes.find_active_mute(member.id, ctx.guild.id)
-            if active_mute is not None:
+            if active_mute:
                 ctx.db.mutes.delete(active_mute.infraction.id)
 
             infraction = Infraction.create(ctx, member, reason, InfractionType.MUTE)
             infraction = ctx.db.infractions.save(infraction)
 
-            if infraction.id is not None:
+            if infraction.id:
                 end_time = datetime.utcnow() + time
                 mute = Mute(
                     infraction,
@@ -103,11 +103,14 @@ class Mutes(Fuzzy.Cog):
 
     @commands.command()
     async def unmute(self, ctx: Fuzzy.Context, who: commands.Greedy[discord.Member]):
+        """Unmutes a user.
+        `who` is a space-separated list of discord users that are to be unmuted. This can be an ID< a user mention, or
+        their name."""
         unmuted_members = []
         all_errors = []
         for member in who:
             active_mute = ctx.db.mutes.find_active_mute(member.id, ctx.guild.id)
-            if active_mute is not None:
+            if active_mute:
                 ctx.db.mutes.delete(active_mute.infraction.id)
 
             mute_role: discord.Role = ctx.guild.fetch_role(
@@ -136,3 +139,15 @@ class Mutes(Fuzzy.Cog):
             f"unmuted {' '.join(unmuted_members)}",
             color=ctx.Color.AUTOMATIC_BLUE,
         )
+
+    @commands.Cog.listener()
+    async def on_member_join(self, member: discord.Member):
+        """Checks if a member who joined the server, had a pre=existing mute and reapplies it if necessary."""
+        active_mute = self.bot.db.mutes.find_active_mute(member.id, member.guild.id)
+        if active_mute:
+
+            mute_role: discord.Role = member.guild.fetch_role(
+                self.bot.db.guilds.find_by_id(member.guild.id).mute_role
+            )
+            if mute_role:
+                await member.add_roles(mute_role)

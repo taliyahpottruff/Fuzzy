@@ -161,7 +161,7 @@ class Fuzzy(commands.Bot):
         )
 
     async def post_log(self, guild: discord.Guild, *args, **kwargs):
-        "Post a log entry to a guild, usage same as ctx.reply"
+        """Post a log entry to a guild, usage same as ctx.reply"""
         configuration = self.db.guilds.find_by_id(guild.id)
         if not configuration:
             return

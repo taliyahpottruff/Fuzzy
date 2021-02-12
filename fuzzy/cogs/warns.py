@@ -16,7 +16,7 @@ class Warns(Fuzzy.Cog):
         reason: Optional[str] = "",
     ):
         """Issue a warning to a user.
-        `who` is space-separated list of discord users that are to be warned. This can be an ID, a user mention, or
+        `who` is a space-separated list of discord users that are to be warned. This can be an ID, a user mention, or
         their name.
         `reason` is the reason why they are being warned. This is optional and can be updated
         later with `${pfx}reason`"""
@@ -24,7 +24,7 @@ class Warns(Fuzzy.Cog):
         for member in who:  # type: discord.Member
             infraction = Infraction.create(ctx, member, reason, InfractionType.WARN)
             infraction = ctx.db.infractions.save(infraction)
-            if infraction is not None:
+            if infraction:
                 warned_members.append(f"{member.mention}: Warning ID {infraction.id}")
 
         warn_string = "\n".join(warned_members)
