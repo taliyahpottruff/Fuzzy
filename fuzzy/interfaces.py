@@ -91,13 +91,13 @@ class ILocks(ABC):
         pass
 
 
-class IPublishedBans(ABC):
+class IPublishedMessages(ABC):
     @abstractmethod
-    def find_by_id(self, infraction_id: int) -> PublishedBan:
+    def find_by_id_and_type(self, infraction_id: int, publish_type: PublishType) -> PublishedMessage:
         pass
 
     @abstractmethod
-    def save(self, published_ban: PublishedBan) -> PublishedBan:
+    def save(self, published_ban: PublishedMessage) -> PublishedMessage:
         pass
 
     @abstractmethod
@@ -115,4 +115,4 @@ class Database(ABC):
         self.mutes: IMutes = IMutes()
         self.guilds: IGuilds = IGuilds()
         self.locks: ILocks = ILocks()
-        self.published_bans: IPublishedBans = IPublishedBans()
+        self.published_messages: IPublishedMessages = IPublishedMessages()

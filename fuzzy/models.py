@@ -19,6 +19,11 @@ class InfractionType(Enum):
     BAN = 3
 
 
+class PublishType(Enum):
+    BAN = 1
+    UNBAN = 2
+
+
 @dataclass
 class GuildSettings(object):
     id: int
@@ -44,9 +49,10 @@ class Pardon(object):
 
 
 @dataclass()
-class PublishedBan(object):
+class PublishedMessage(object):
     infraction_id: int
     message_id: int
+    publish_type: PublishType
 
 
 @dataclass()
@@ -59,7 +65,8 @@ class Infraction(object):
     infraction_on: datetime
     infraction_type: InfractionType
     pardon: Pardon
-    published_ban: PublishedBan
+    published_ban: PublishedMessage
+    published_unban: PublishedMessage
 
     @classmethod
     def create(
@@ -82,6 +89,7 @@ class Infraction(object):
             infraction_type,
             None,
             None,
+            None
         )
 
 

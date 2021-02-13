@@ -25,15 +25,29 @@ class InfractionAdmin(Fuzzy.Cog):
             infraction: Infraction = ctx.db.infractions.find_by_id(
                 infraction_id, ctx.guild.id
             )
-            if not infraction:
+            if infraction:
                 all_infractions.append(infraction)
             else:
                 all_errors.append(f"{infraction_id}")
         if not all_infractions:
-            raise UnableToComply("Could not find any Warns or Mutes with those IDs.")
+            raise UnableToComply("Could not find any Infractions with those IDs.")
         all_pardons = []
 
         for infraction in all_infractions:
+            if (
+                infraction.infraction_type == InfractionType.BAN
+                and infraction.published_unban
+            ):
+                message: discord.Message = ctx.author.fetch_message(
+                    infraction.published_ban.message_id
+                )
+                if message:
+                    await message.edit(
+                        embed=InfractionAdmin.create_ban_embed(infraction)
+                    )
+                else:
+                    infraction.published_ban = None
+                    ctx.db.published_messages.delete(infraction.id)
             pardon = Pardon(
                 infraction.id,
                 DBUser(ctx.author.id, f"{ctx.author.name}#{ctx.author.discriminator}"),
@@ -141,7 +155,7 @@ class InfractionAdmin(Fuzzy.Cog):
                     )
                 else:
                     infraction.published_ban = None
-                    ctx.db.published_bans.delete(infraction.id)
+                    ctx.db.published_messages.delete(infraction.id)
 
         if all_errors:
             msg = "Error Updating Reason: " + " ".join(all_errors)
@@ -210,7 +224,7 @@ class InfractionAdmin(Fuzzy.Cog):
             message = await channel.send(embed=InfractionAdmin.create_ban_embed(ban))
             if message:
                 all_published_bans.append(
-                    ctx.db.published_bans.save(PublishedBan(ban.id, message.id))
+                    ctx.db.published_messages.save(PublishedMessage(ban.id, message.id, PublishType.BAN))
                 )
             else:
                 all_message_errors.append(ban)
@@ -297,7 +311,7 @@ class InfractionAdmin(Fuzzy.Cog):
             message = await channel.send(embed=InfractionAdmin.create_unban_embed(ban))
             if message:
                 all_published_unbans.append(
-                    ctx.db.published_bans.save(PublishedBan(ban.id, message.id))
+                    ctx.db.published_messages.save(PublishedMessage(ban.id, message.id, PublishType.UNBAN))
                 )
             else:
                 all_message_errors.append(ban)

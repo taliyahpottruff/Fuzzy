@@ -30,12 +30,12 @@ class Warns(Fuzzy.Cog):
         warn_string = "\n".join(warned_members)
         await ctx.reply(
             title="Warning",
-            msg=f"**Reason:** {reason}\n" f"{warn_string}",
+            msg=(f"**Reason:** {reason}\n" if reason else "") + f"{warn_string}",
             color=ctx.Color.I_GUESS,
         )
         await self.bot.post_log(
             ctx.guild,
             msg=f"{ctx.author.name}#{ctx.author.discriminator} "
-            f"warned {warn_string} for {reason}",
+            f"warned: {warn_string} " + (f"for {reason}" if reason else ""),
             color=ctx.Color.I_GUESS,
         )

@@ -18,7 +18,6 @@ class Mutes(Fuzzy.Cog):
     async def execute_expired_mutes(self):
         """Finds expired mutes and unmutes the user"""
         mutes: List[Mute] = self.bot.db.mutes.find_expired_mutes()
-        unmuted_users = []
         for mute in mutes:
             guild: discord.Guild = await self.bot.fetch_guild(mute.infraction.guild.id)
             # noinspection PyTypeChecker
@@ -31,12 +30,11 @@ class Mutes(Fuzzy.Cog):
 
             if user and mute_role:
                 await user.remove_roles(mute_role)
-                self.bot.db.mutes.delete(mute.infraction.id)
-                unmuted_users.append(user)
-                await self.bot.post_log(
-                    guild,
-                    msg=f"{mute.user.name} mute expired.",
-                    color=self.bot.Context.Color.AUTOMATIC_BLUE,
+            self.bot.db.mutes.delete(mute.infraction.id)
+            await self.bot.post_log(
+                guild,
+                msg=f"{mute.user.name} mute expired.",
+                color=self.bot.Context.Color.AUTOMATIC_BLUE,
                 )
 
     @commands.command()
