@@ -35,7 +35,7 @@ class Mutes(Fuzzy.Cog):
                 guild,
                 msg=f"{mute.user.name} mute expired.",
                 color=self.bot.Context.Color.AUTOMATIC_BLUE,
-                )
+            )
 
     @commands.command()
     async def mute(

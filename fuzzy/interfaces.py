@@ -93,7 +93,9 @@ class ILocks(ABC):
 
 class IPublishedMessages(ABC):
     @abstractmethod
-    def find_by_id_and_type(self, infraction_id: int, publish_type: PublishType) -> PublishedMessage:
+    def find_by_id_and_type(
+        self, infraction_id: int, publish_type: PublishType
+    ) -> PublishedMessage:
         pass
 
     @abstractmethod
@@ -105,7 +107,7 @@ class IPublishedMessages(ABC):
         pass
 
 
-class Database(ABC):
+class IDatabase(ABC):
     @abstractmethod
     def __init__(self, config, schema_file: TextIO):
 

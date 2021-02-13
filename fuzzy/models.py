@@ -89,7 +89,7 @@ class Infraction(object):
             infraction_type,
             None,
             None,
-            None
+            None,
         )
 
 

@@ -224,7 +224,9 @@ class InfractionAdmin(Fuzzy.Cog):
             message = await channel.send(embed=InfractionAdmin.create_ban_embed(ban))
             if message:
                 all_published_bans.append(
-                    ctx.db.published_messages.save(PublishedMessage(ban.id, message.id, PublishType.BAN))
+                    ctx.db.published_messages.save(
+                        PublishedMessage(ban.id, message.id, PublishType.BAN)
+                    )
                 )
             else:
                 all_message_errors.append(ban)
@@ -311,7 +313,9 @@ class InfractionAdmin(Fuzzy.Cog):
             message = await channel.send(embed=InfractionAdmin.create_unban_embed(ban))
             if message:
                 all_published_unbans.append(
-                    ctx.db.published_messages.save(PublishedMessage(ban.id, message.id, PublishType.UNBAN))
+                    ctx.db.published_messages.save(
+                        PublishedMessage(ban.id, message.id, PublishType.UNBAN)
+                    )
                 )
             else:
                 all_message_errors.append(ban)

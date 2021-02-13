@@ -11,7 +11,7 @@ import discord
 from discord.ext import commands
 
 from fuzzy.fuzzy import Fuzzy, AnticipatedError, Unauthorized, PleaseRestate
-from fuzzy.interfaces import Database
+from fuzzy.interfaces import IDatabase
 from . import cogs
 
 config = ConfigParser()
@@ -30,7 +30,7 @@ intents = discord.Intents.default()
 intents.members = True
 
 # noinspection PyTypeChecker
-database: Database = None
+database: IDatabase = None
 
 bot = Fuzzy(
     config,

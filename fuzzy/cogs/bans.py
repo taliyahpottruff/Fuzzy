@@ -36,14 +36,14 @@ class Bans(Fuzzy.Cog):
             guild,
             title=f"{infraction.moderator.name} (ID {infraction.moderator.id})",
             msg=f"**Banned** {infraction.user.name} (ID {infraction.user.id})\n"
-                f"**Reason:** {infraction.reason or '(no reason specified)'}",
+            f"**Reason:** {infraction.reason or '(no reason specified)'}",
             color=self.bot.Context.Color.BAD,
             subtitle=(
                 f"This can be published to the published to the public log channel with "
                 f"`{self.bot.command_prefix}publish ban {infraction.id}`"
                 if infraction.reason
                 else f"Reason can be updated with "
-                     f"`{self.bot.command_prefix}reason {infraction.id} <your reason here>`"
+                f"`{self.bot.command_prefix}reason {infraction.id} <your reason here>`"
             ),
         )
 
@@ -55,13 +55,18 @@ class Bans(Fuzzy.Cog):
             guild,
             title=f"**Unbanned**",
             msg=f"{user.name} (ID {user.id})\n"
-                f"`{self.bot.command_prefix}pardon {infraction.id} <reason>` to add an unban reason."
-                f"Then `{self.bot.command_prefix}publish unban {infraction.id}` to publish to public log channel.",
-            color=self.bot.Context.Color.GOOD
+            f"`{self.bot.command_prefix}pardon {infraction.id} <reason>` to add an unban reason."
+            f"Then `{self.bot.command_prefix}publish unban {infraction.id}` to publish to public log channel.",
+            color=self.bot.Context.Color.GOOD,
         )
 
     @commands.command()
-    async def ban(self, ctx: Fuzzy.Context, who: commands.Greedy[discord.User], reason: Optional[str] = ""):
+    async def ban(
+        self,
+        ctx: Fuzzy.Context,
+        who: commands.Greedy[discord.User],
+        reason: Optional[str] = "",
+    ):
         banned_users = []
         for user in who:  # type: discord.Member
             await ctx.guild.ban(user, reason=reason, delete_message_days=0)
@@ -79,7 +84,7 @@ class Bans(Fuzzy.Cog):
         await self.bot.post_log(
             ctx.guild,
             msg=f"{ctx.author.name}#{ctx.author.discriminator} "
-                f"banned: {ban_string} " + (f"for {reason}" if reason else ""),
+            f"banned: {ban_string} " + (f"for {reason}" if reason else ""),
             color=ctx.Color.BAD,
         )
 
@@ -94,13 +99,11 @@ class Bans(Fuzzy.Cog):
 
         unban_string = "\n".join(unbanned_users)
         await ctx.reply(
-            title="Unbanned",
-            msg=f"{unban_string}",
-            color=ctx.Color.GOOD,
+            title="Unbanned", msg=f"{unban_string}", color=ctx.Color.GOOD,
         )
         await self.bot.post_log(
             ctx.guild,
             msg=f"{ctx.author.name}#{ctx.author.discriminator} "
-                f"unbanned: {unban_string} ",
+            f"unbanned: {unban_string} ",
             color=ctx.Color.GOOD,
         )
