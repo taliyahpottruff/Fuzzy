@@ -19,7 +19,9 @@ class Locks(Fuzzy.Cog):
         locks: List[Lock] = self.bot.db.locks.find_expired_locks()
         for lock in locks:
             guild: discord.Guild = await self.bot.fetch_guild(lock.guild.id)
+            # noinspection PyTypeChecker
             channel: discord.TextChannel = None
+            # noinspection PyTypeChecker
             everyone_role: discord.Role = None
             if guild:
                 channel = guild.get_channel(lock.channel_id)
@@ -34,29 +36,44 @@ class Locks(Fuzzy.Cog):
     @commands.command()
     async def lock(self, ctx: Fuzzy.Context, channels: Optional[commands.Greedy[discord.TextChannel]],
                    time: ParseableTimedelta, reason: Optional[str] = ""):
-        active_locks = []
-        previous_values = {}
-        if channels:
-            for channel in channels:
-                lock = ctx.db.locks.find_by_id(channel.id)
-                if lock:
-                    active_locks.append(lock)
-                    previous_values[channel.id] = lock.previous_value
-        else:
-            active_locks.append(ctx.db.locks.find_by_id(ctx.channel.id))
-
-        if active_locks:
-            for lock in active_locks:
-                ctx.db.locks.delete(lock.channel_id)
-
         locks = []
         everyone_role: discord.Role = ctx.guild.get_role(ctx.guild.id)
+        if not channels:
+            channels = [ctx.channel]
         for channel in channels:
-            locks.append(Lock(channel.id or ctx.channel.id,
-                              previous_values[channel.id]
-                              if channel.id in previous_values.values()
-                              else channel.overwrites_for(everyone_role).read_messages,
-                              DBUser(ctx.author.id, f"{ctx.author.name}#{ctx.author.discriminator}"),
-                              ctx.guild.id,
-                              reason,
-                              datetime.utcnow() + time))
+            ctx.db.locks.save(
+                Lock(channel.id or ctx.channel.id,
+                     channel.overwrites_for(everyone_role).read_messages,
+                     DBUser(ctx.author.id, f"{ctx.author.name}#{ctx.author.discriminator}"),
+                     ctx.guild.id,
+                     reason,
+                     datetime.utcnow() + time)
+            )
+            locks.append(f"{channel.mention}")
+            await channel.set_permissions(everyone_role, send_messages=False)
+        if not locks:
+            await ctx.reply("Could not find any channels with those IDs.")
+            return
+        await ctx.reply(f"Locked the following channels for {time}: {' '.join(locks)}")
+        await self.bot.post_log(ctx.guild,
+                                msg=f"{ctx.author.name}#{ctx.author.discriminator} "
+                                    f"locked {' '.join(locks)} for {time} for {reason}")
+
+    @commands.command()
+    async def unlock(self, ctx: Fuzzy.Context, channels: Optional[commands.Greedy[discord.TextChannel]]):
+        unlocks = []
+        everyone_role: discord.Role = ctx.guild.get_role(ctx.guild.id)
+        if not channels:
+            channels = [ctx.channel]
+        for channel in channels:
+            lock = ctx.db.locks.find_by_id(channel.id)
+            await channel.set_permissions(everyone_role, send_message=lock.previous_value)
+            ctx.db.locks.delete(lock.channel_id)
+            unlocks.append(channel.mention)
+        if not unlocks:
+            await ctx.reply("Could not find any channels with those IDs.")
+            return
+        await ctx.reply(f"Unlocked the following channels: {' '.join(unlocks)}")
+        await self.bot.post_log(ctx.guild,
+                                msg=f"{ctx.author.name}#{ctx.author.discriminator} "
+                                    f"unlocked {' '.join(unlocks)}")

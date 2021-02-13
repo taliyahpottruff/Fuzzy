@@ -69,7 +69,7 @@ async def on_ready():
     global ONCE_LOCK  # pylint: disable=global-statement
     if not ONCE_LOCK:
         bot.add_cog(cogs.Mutes(bot))
-        # bot.add_cog(cogs.Locks(bot))
+        bot.add_cog(cogs.Locks(bot))
         bot.owner_id = (await bot.application_info()).owner.id
 
         # inserting runtime data into help
