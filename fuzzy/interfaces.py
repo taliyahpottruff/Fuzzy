@@ -79,7 +79,7 @@ class ILocks(ABC):
         pass
 
     @abstractmethod
-    def find_expired_locks(self) -> Lock:
+    def find_expired_locks(self) -> List[Lock]:
         pass
 
     @abstractmethod

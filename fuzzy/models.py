@@ -103,6 +103,7 @@ class Mute(object):
 @dataclass()
 class Lock(object):
     channel_id: int
+    previous_value: bool
     moderator: DBUser
     guild: GuildSettings
     reason: str

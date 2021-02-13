@@ -36,7 +36,7 @@ class Bans(Fuzzy.Cog):
             guild,
             title=f"{infraction.moderator.name} (ID {infraction.moderator.id})",
             msg=f"**Banned** {infraction.user.name} (ID {infraction.user.id})\n"
-                f"**Reason: {infraction.reason or '(no reason specified)'}",
+                f"**Reason:** {infraction.reason or '(no reason specified)'}",
             color=self.bot.Context.Color.BAD,
             subtitle=(
                 f"This can be published to the published to the public log channel with "
@@ -101,6 +101,6 @@ class Bans(Fuzzy.Cog):
         await self.bot.post_log(
             ctx.guild,
             msg=f"{ctx.author.name}#{ctx.author.discriminator} "
-                f"Unbanned: {unban_string} ",
+                f"unbanned: {unban_string} ",
             color=ctx.Color.GOOD,
         )
