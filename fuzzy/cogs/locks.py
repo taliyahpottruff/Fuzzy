@@ -16,6 +16,7 @@ class Locks(Fuzzy.Cog):
 
     @tasks.loop(seconds=0.5)
     async def execute_expired_locks(self):
+        """Finds expired locks and unlocks them."""
         locks: List[Lock] = self.bot.db.locks.find_expired_locks()
         for lock in locks:
             guild: discord.Guild = await self.bot.fetch_guild(lock.guild.id)
@@ -45,6 +46,13 @@ class Locks(Fuzzy.Cog):
         time: ParseableTimedelta,
         reason: Optional[str] = "",
     ):
+        """Prevents users from being able to speak in a channel.
+        `channel` is the channel to lock. If left empty the current channel will be used.
+
+        `time` is a time delta in (d)ays (h)ours (m)inutes (s)econds.
+        Number first, and type second i.e.`5h` for 5 hours
+
+        `reason` is the reason for the mute. This is optional."""
         lock = None
         everyone_role: discord.Role = ctx.guild.get_role(ctx.guild.id)
         if not channel:
@@ -77,6 +85,8 @@ class Locks(Fuzzy.Cog):
     async def unlock(
         self, ctx: Fuzzy.Context, channel: Optional[discord.TextChannel],
     ):
+        """Prevents users from being able to speak in a channel.
+        channel` is the channel to lock. If left empty the current channel will be used."""
         lock = None
         everyone_role: discord.Role = ctx.guild.get_role(ctx.guild.id)
         if not channel:

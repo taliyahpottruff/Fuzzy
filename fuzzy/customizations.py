@@ -143,11 +143,11 @@ class Fuzzy(commands.Bot):
 
     def __init__(self, config, database: Database, **kwargs):
         self.config = config
-        self.db: Database = database
 
         self.log = logging.getLogger("Fuzzy")
         self.log.setLevel(logging.INFO)
 
+        self.db: Database = database
         super().__init__(command_prefix=config["discord"]["prefix"], **kwargs)
 
     @staticmethod

@@ -14,6 +14,8 @@ class Admin(Fuzzy.Cog):
 
     @commands.command(parent=admin)
     async def log(self, ctx: Fuzzy.Context, channel: Optional[discord.TextChannel]):
+        """Updates the mod log channel.
+        `channel` is the channel to post the logs in. If left empty, Fuzzy uses the current channel."""
         if not channel:
             channel = ctx.channel
         guild = ctx.db.guilds.find_by_id(ctx.guild.id)
@@ -25,6 +27,8 @@ class Admin(Fuzzy.Cog):
     async def public_log(
         self, ctx: Fuzzy.Context, channel: Optional[discord.TextChannel]
     ):
+        """Updates the public log channel.
+        `channel` is the channel to post the logs in. If left empty, Fuzzy uses the current channel."""
         if not channel:
             channel = ctx.channel
         guild = ctx.db.guilds.find_by_id(ctx.guild.id)
@@ -38,6 +42,9 @@ class Admin(Fuzzy.Cog):
 
     @commands.command(parent=admin)
     async def auto_pardon(self, ctx: Fuzzy.Context, time: str):
+        """Updates how long till Infractions are auto pardoned.
+        `time` is an amount followed by a letter to indicate type. I.E 6m would be 6 months.
+        Can take (d)ays (m)onths or (y)ears."""
         guild = ctx.db.guilds.find_by_id(ctx.guild.id)
         duration_type = None
         if time[-1].lower() == "d":

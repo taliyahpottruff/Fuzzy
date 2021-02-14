@@ -73,5 +73,5 @@ CREATE TABLE IF NOT EXISTS locks (
     end_time        timestamp   NOT NULL,
 
     FOREIGN KEY(guild_id) REFERENCES guilds(id)
-)
+);
 

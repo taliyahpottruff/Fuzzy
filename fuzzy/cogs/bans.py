@@ -12,6 +12,8 @@ from fuzzy.models import Infraction, InfractionType, DBUser
 class Bans(Fuzzy.Cog):
     @commands.Cog.listener()
     async def on_member_ban(self, guild: discord.Guild, user: discord.User):
+        """Posts a ban to the Log channel. Checks to see if Fuzzy was used for ban and if not, creates a new
+        infraction log."""
         await asyncio.sleep(5.0)
 
         infraction = self.bot.db.infractions.find_recent_ban_by_id(user.id, guild.id)
@@ -49,6 +51,7 @@ class Bans(Fuzzy.Cog):
 
     @commands.Cog.listener()
     async def on_member_unban(self, guild: discord.Guild, user: discord.User):
+        """Posts an unban to the Log channel."""
         infraction = self.bot.db.infractions.find_recent_ban_by_id(user.id, guild.id)
 
         await self.bot.post_log(
@@ -67,6 +70,9 @@ class Bans(Fuzzy.Cog):
         who: commands.Greedy[discord.User],
         reason: Optional[str] = "",
     ):
+        """Bans a user from the server.
+        `who` is a space-separated list of users. This can be mentions, ids or names.
+        `reason` is the reason for the ban. This can be updated later with ${pfx}reason"""
         banned_users = []
         for user in who:  # type: discord.Member
             await ctx.guild.ban(user, reason=reason, delete_message_days=0)
@@ -90,6 +96,9 @@ class Bans(Fuzzy.Cog):
 
     @commands.command()
     async def unban(self, ctx: Fuzzy.Context, who: commands.Greedy[discord.User]):
+        """Unbans a user from the server. This does not pardon the infraction automatically. use ${pfx}pardon to
+        do that.
+        `who` is a space-separated list of users. This can be mentions, ids or names."""
         unbanned_users = []
         for user in who:  # type: discord.Member
             await ctx.guild.unban(user)

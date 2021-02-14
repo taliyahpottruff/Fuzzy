@@ -260,6 +260,9 @@ class InfractionAdmin(Fuzzy.Cog):
 
     @commands.command(parent=publish)
     async def unban(self, ctx: Fuzzy.Context, infraction_ids: commands.Greedy[int]):
+        """Publishes an unban to the public ban log channel.
+        If unban has already been posted you can use ${pfx}pardon to update it.
+        infraction_ids is a space-separated list of infractions"""
         all_unbans = []
         all_unpardoned_bans = []
         all_non_bans = []
@@ -349,6 +352,7 @@ class InfractionAdmin(Fuzzy.Cog):
 
     @staticmethod
     def create_ban_embed(infraction: Infraction):
+        """Creates an embed for bans"""
         return discord.Embed(
             description=f"**Date:** {infraction.infraction_on.strftime('%Y-%m-%d')}\n"
             f"**User:** {infraction.user.name}\n"
@@ -357,6 +361,7 @@ class InfractionAdmin(Fuzzy.Cog):
 
     @staticmethod
     def create_unban_embed(infraction: Infraction):
+        """Creates an embed for unbans"""
         return discord.Embed(
             description=f"**Date:** {infraction.pardon.pardon_on.strftime('%Y-%m-%d')}\n"
             f"**User:** {infraction.user.name}\n"

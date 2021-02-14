@@ -19,7 +19,7 @@ config = ConfigParser()
 config.read("../fuzzy.cfg")
 
 logging.basicConfig(
-    format="%(levelname) %(name): %(message)", level=config["log"]["level"]
+    format="%(levelname)s %(name)s: %(message)s", level=config["log"]["level"]
 )
 
 for source in config["log"]["suppress"].split(","):
@@ -50,7 +50,7 @@ def process_docstrings(text) -> str:
     return re.sub(
         r"(.+)\n *",
         r"\1 ",
-        Template(text).safe_substitute({"pfx": bot.config["discord"]["prefix"],}),
+        Template(text).safe_substitute({"pfx": bot.config["discord"]["prefix"], }),
     )
 
 
@@ -130,7 +130,7 @@ async def _help(ctx: Fuzzy.Context, *, subject: Optional[str]):
 
 
 @bot.event
-async def on_command(ctx):
+async def on_command(ctx: Fuzzy.Context):
     """Log when we invoke commands"""
     args = [
         arg
@@ -142,7 +142,7 @@ async def on_command(ctx):
 
 
 @bot.event
-async def on_command_error(ctx, error):
+async def on_command_error(ctx: Fuzzy.Context, error):
     """
     Handle errors, delegating all "internal errors" (exceptions foreign to
     discordpy) to stderr and discordpy (i.e. high-level) errors to the user.
