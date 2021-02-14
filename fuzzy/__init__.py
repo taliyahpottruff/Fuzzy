@@ -11,9 +11,11 @@ import discord
 from discord.ext import commands
 
 from databases import Database
-from customizations import Fuzzy, AnticipatedError, Unauthorized, PleaseRestate
+from customizations import Fuzzy
+from errors import AnticipatedError, Unauthorized, PleaseRestate
 from fuzzy import cogs
 from databases import Database
+from models import GuildSettings, DurationType
 
 config = ConfigParser()
 config.read("../fuzzy.cfg")
@@ -41,7 +43,7 @@ bot = Fuzzy(
     help_command=None,
     intents=intents,
 )
-for cog in [cogs.Warns, cogs.InfractionAdmin, cogs.Bans, cogs.Logs, cogs.Purges]:
+for cog in [cogs.Warns, cogs.InfractionAdmin, cogs.Bans, cogs.Logs, cogs.Purges, cogs.Admin]:
     bot.add_cog(cog(bot))
 
 
@@ -73,6 +75,37 @@ async def on_ready():
             command.help = process_docstrings(command.help)
 
         ONCE_LOCK = True
+        for guild in bot.guilds:
+            guild_settings = bot.db.guilds.find_by_id(guild.id)
+            if not guild_settings:
+                # noinspection PyTypeChecker
+                bot.db.guilds.save(
+                    GuildSettings(
+                        guild.id,
+                        None,
+                        None,
+                        DurationType.YEARS,
+                        30,
+                        None,
+                    )
+                )
+
+
+@bot.event
+async def on_guild_join(guild: discord.Guild):
+    guild_settings = bot.db.guilds.find_by_id(guild.id)
+    if not guild_settings:
+        # noinspection PyTypeChecker
+        bot.db.guilds.save(
+            GuildSettings(
+                guild.id,
+                None,
+                None,
+                DurationType.YEARS,
+                30,
+                None,
+            )
+        )
 
 
 @bot.command(name="help")
@@ -91,7 +124,7 @@ async def _help(ctx: Fuzzy.Context, *, subject: Optional[str]):
 
     if not subject:
         embed.description = process_docstrings(
-            f"""This is the *[Fuzzy]({ctx.bot.config['info']['source']}), a general-purpose moderation bot for Discord.
+            f"""This is [Fuzzy]({ctx.bot.config['info']['source']}), a general-purpose moderation bot for Discord.
 
 
             For detailed help on any command, you can use `{signature(_help)}`. Fuzzy
@@ -105,11 +138,19 @@ async def _help(ctx: Fuzzy.Context, *, subject: Optional[str]):
             embed.description += f"\nYou can join the support server here: {invite}."
 
         all_commands = ""
+        standalone_commands = ""
+        previous_group = None
         for cmd in sorted(ctx.bot.walk_commands(), key=lambda x: x.qualified_name):
             if cmd.__class__ == commands.Command:
-                all_commands += f"`{cmd.qualified_name}` "
+                if not cmd.parent:
+                    standalone_commands += f"`{bot.command_prefix}{cmd.qualified_name}` "
+                else:
+                    if previous_group != cmd.parent:
+                        all_commands += f"\n**`{bot.command_prefix}{cmd.parent.name}`** "
+                    all_commands += f"`{cmd.name}` "
 
-        embed.add_field(name="All Commands", value=all_commands)
+                previous_group = cmd.parent
+        embed.add_field(name="All Commands", value=standalone_commands + "\n" + all_commands)
 
     else:
         for command in ctx.bot.walk_commands():

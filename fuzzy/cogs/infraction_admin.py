@@ -2,7 +2,8 @@ from typing import Optional
 
 from discord.ext import commands
 
-from fuzzy.customizations import UnableToComply, Fuzzy
+from fuzzy.errors import UnableToComply
+from fuzzy.customizations import Fuzzy
 from fuzzy.models import *
 
 
@@ -12,6 +13,7 @@ class InfractionAdmin(Fuzzy.Cog):
         self,
         ctx: Fuzzy.Context,
         infraction_ids: commands.Greedy[int],
+        *,
         reason: Optional[str],
     ):
         """Pardon a user's infraction. This will leave the infraction in the logs but will mark it as pardoned.
@@ -192,7 +194,7 @@ class InfractionAdmin(Fuzzy.Cog):
             infraction: Infraction = ctx.db.infractions.find_by_id(
                 infraction_id, ctx.guild.id
             )
-            if infraction and infraction.infraction_type == InfractionType.BAN:
+            if infraction and infraction.infraction_type.value == InfractionType.BAN.value:
                 all_bans.append(infraction)
             elif infraction.infraction_type != InfractionType.BAN:
                 all_non_bans.append(str(infraction.id))
@@ -274,7 +276,7 @@ class InfractionAdmin(Fuzzy.Cog):
             )
             if (
                 infraction
-                and infraction.infraction_type == InfractionType.BAN
+                and infraction.infraction_type.value == InfractionType.BAN.value
                 and infraction.pardon
             ):
                 all_unbans.append(infraction)

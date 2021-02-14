@@ -98,10 +98,10 @@ class Admin(Fuzzy.Cog):
             ):
                 await channel.set_permissions(role, send_messages=False)
         for category in ctx.guild.categories:
-            await category.set_premissions(role, send_messages=False)
+            await category.set_permissions(role, send_messages=False)
 
         await ctx.reply(
-            f"{self.bot.user.display_name} will now use {role.name} when muting someone."
+            f"{self.bot.user.display_name} will now use {role.mention} when muting someone."
         )
         await self.bot.post_log(
             ctx.guild,
@@ -113,7 +113,7 @@ class Admin(Fuzzy.Cog):
         """This refreshes the permissions of the mute role. It will go through every channel and
         category on the server and add this role as an override that blocks 'Send Messages' permissions"""
         guild = ctx.db.guilds.find_by_id(ctx.guild.id)
-        role = await ctx.guild.create_role(name="Mute", color=0x818386)
+        role = await ctx.guild.get_role(guild.mute_role)
         guild.mute_role = role.id
         ctx.db.guilds.save(guild)
 
@@ -124,7 +124,7 @@ class Admin(Fuzzy.Cog):
             ):
                 await channel.set_permissions(role, send_messages=False)
         for category in ctx.guild.categories:
-            await category.set_premissions(role, send_messages=False)
+            await category.set_permissions(role, send_messages=False)
 
         await ctx.reply(
             f"{role.mention} permissions have been refreshed on the server. If issues persist "

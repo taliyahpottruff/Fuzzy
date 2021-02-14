@@ -2,7 +2,8 @@ import enum
 import logging
 import random
 import re
-from datetime import timedelta
+from copy import copy
+from datetime import timedelta, datetime, timezone
 from typing import Union
 
 import discord
@@ -10,28 +11,6 @@ from discord import Activity, ActivityType
 from discord.ext import commands
 
 from databases import Database
-
-
-class AnticipatedError(Exception):
-    """An error we expected."""
-
-
-class UnableToComply(AnticipatedError):
-    """We understood what the user wants, but can't."""
-
-    TEXT = "Unable to comply."
-
-
-class Unauthorized(AnticipatedError):
-    """We understood what the user wants, but they aren't allowed to do it."""
-
-    TEXT = "Unauthorized."
-
-
-class PleaseRestate(AnticipatedError):
-    """We didn't understand what the user wants."""
-
-    TEXT = "Please restate query."
 
 
 class Fuzzy(commands.Bot):
@@ -65,6 +44,25 @@ class Fuzzy(commands.Bot):
         def db(self) -> Database:
             """Return the bot's database connection."""
             return self.bot.db
+
+        async def invoke_command(self, text: str):
+            "Pretend the user is invoking a command."
+            words = text.split(" ")
+            if not words:
+                return
+
+            # prefix for commands is optional, as with help
+            if not words[0].startswith(self.bot.command_prefix):
+                words[0] = self.bot.command_prefix + words[0]
+                text = " ".join(words)
+
+            message = copy(self.message)
+
+            message.content = text
+            message.id = discord.utils.time_snowflake(
+                datetime.now(tz=timezone.utc).replace(tzinfo=None)
+            )
+            await self.bot.process_commands(message)
 
         async def reply(
             self,
@@ -146,9 +144,11 @@ class Fuzzy(commands.Bot):
 
         self.log = logging.getLogger("Fuzzy")
         self.log.setLevel(logging.INFO)
-
         self.db: Database = database
         super().__init__(command_prefix=config["discord"]["prefix"], **kwargs)
+
+    async def get_context(self, message, *, cls=Context):
+        return await super().get_context(message, cls=cls)
 
     @staticmethod
     def random_status() -> Activity:
@@ -165,9 +165,9 @@ class Fuzzy(commands.Bot):
         configuration = self.db.guilds.find_by_id(guild.id)
         if not configuration:
             return
-
         channel = self.get_channel(configuration.mod_log)
-        await self.Context.reply(self.get_channel(channel), *args, **kwargs)
+        if channel:
+            await self.Context.reply(channel, *args, **kwargs)
 
 
 class ParseableTimedelta(timedelta):

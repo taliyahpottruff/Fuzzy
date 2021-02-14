@@ -27,7 +27,7 @@ CREATE TABLE IF NOT EXISTS infractions (
     guild_id        INTEGER     NOT NULL,
     reason          TEXT,
     infraction_on   timestamp   NOT NULL,
-    infraction_type TEXT     NOT NULL CHECK(infraction_type == 1 OR infraction_type == 2 OR infraction_type == 3),
+    infraction_type TEXT        NOT NULL,
 
     FOREIGN KEY(guild_id) REFERENCES guilds(id)
 );

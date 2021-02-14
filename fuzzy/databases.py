@@ -61,7 +61,7 @@ class Database:
 
         self.infractions = Infractions(self.conn, self)
         self.pardons = Pardons(self.conn)
-        self.mutes = Mutes(self.conn)
+        self.mutes = Mutes(self.conn, self)
         self.guilds = Guilds(self.conn)
         self.locks = Locks(self.conn, self)
         self.published_messages = PublishedMessages(self.conn)
@@ -103,15 +103,44 @@ class Infractions(IInfractions):
                 else None
             )
 
+    def find_by_id_only(self, infraction_id: int):
+        infraction = None
+        try:
+            infraction = self.conn.execute(
+                "SELECT * FROM infractions WHERE oid=:id",
+                {"id": infraction_id},
+            ).fetchone()
+        except sqlite3.DatabaseError:
+            pass
+        finally:
+            return (
+                Infraction(
+                    infraction["oid"],
+                    DBUser(infraction["user_id"], infraction["user_name"]),
+                    DBUser(infraction["moderator_id"], infraction["moderator_name"]),
+                    self.db.guilds.find_by_id(infraction['guild_id']),
+                    infraction["reason"],
+                    infraction["infraction_on"],
+                    InfractionType(infraction["infraction_type"]),
+                    self.db.pardons.find_by_id(infraction_id),
+                    self.db.published_messages.find_by_id_and_type(
+                        infraction_id, PublishType.BAN
+                    ),
+                    self.db.published_messages.find_by_id_and_type(
+                        infraction_id, PublishType.UNBAN
+                    ),
+                )
+                if infraction
+                else None
+            )
+
     def save(self, infraction: Infraction) -> Infraction:
         if infraction.id:
-            retrieved_infraction = self.find_by_id(infraction.id, infraction.guild.id)
             self.conn.execute(
                 "UPDATE infractions SET reason=:reason WHERE oid=:id",
                 {"reason": infraction.reason, "id": infraction.id},
             )
             self.conn.commit()
-            return retrieved_infraction
         else:
             values = (
                 infraction.user.id,
@@ -121,16 +150,16 @@ class Infractions(IInfractions):
                 infraction.guild.id,
                 infraction.reason,
                 infraction.infraction_on,
-                infraction.infraction_type,
+                infraction.infraction_type.value,
             )
             sql = """INSERT INTO infractions (user_id, user_name, moderator_id, moderator_name, guild_id, reason, 
             infraction_on, infraction_type) VALUES(?,?,?,?,?,?,?,?)"""
             try:
-                self.conn.execute(sql, values)
+                infraction.id = self.conn.execute(sql, values).lastrowid
                 self.conn.commit()
             except sqlite3.DatabaseError:
                 pass
-            return self.find_by_id(infraction.id, infraction.guild.id)
+        return self.find_by_id(infraction.id, infraction.guild.id)
 
     def delete(self, infraction_id: int) -> None:
         self.db.pardons.delete(infraction_id)
@@ -404,11 +433,15 @@ class Pardons(IPardons):
             )
 
     def save(self, pardon: Pardon) -> Pardon:
-        pardon = self.conn.execute(
-            "SELECT * FROM pardons WHERE infraction_id=:infraction_id",
-            {"infraction_id": pardon.infraction_id},
-        ).fetchone()
-        if pardon:
+        retrieved_pardon = None
+        try:
+            retrieved_pardon = self.conn.execute(
+                "SELECT * FROM pardons WHERE infraction_id=:infraction_id",
+                {"infraction_id": pardon.infraction_id},
+            ).fetchone()
+        except sqlite3.DatabaseError:
+            pass
+        if retrieved_pardon:
             self.conn.execute(
                 "UPDATE pardons SET reason=:reason WHERE infraction_id=:infraction_id",
                 {"reason": pardon.reason, "infraction_id": pardon.infraction_id},
@@ -437,8 +470,9 @@ class Pardons(IPardons):
 
 
 class Mutes(IMutes):
-    def __init__(self, conn: sqlite3.Connection):
+    def __init__(self, conn: sqlite3.Connection, db: Database):
         self.conn = conn
+        self.db = db
 
     def find_by_id(self, infraction_id: int) -> Mute:
         mute = None
@@ -452,7 +486,7 @@ class Mutes(IMutes):
         finally:
             return (
                 Mute(
-                    mute["infraction_id"],
+                    self.db.infractions.find_by_id_only(mute["infraction_id"]),
                     mute["end_time"],
                     DBUser(mute["user_id"], mute["user_name"]),
                 )
@@ -461,7 +495,7 @@ class Mutes(IMutes):
             )
 
     def find_expired_mutes(self) -> List[Mute]:
-        mutes = None
+        mutes = []
         try:
             mutes = self.conn.execute(
                 "SELECT * FROM mutes WHERE DATETIME(end_time) < :time",
@@ -474,7 +508,7 @@ class Mutes(IMutes):
             for mute in mutes:
                 objectified_mutes.append(
                     Mute(
-                        mute["infraction_id"],
+                        self.db.infractions.find_by_id_only(mute["infraction_id"]),
                         mute["end_time"],
                         DBUser(mute["user_id"], mute["user_name"]),
                     )
@@ -510,7 +544,7 @@ class Mutes(IMutes):
         finally:
             return (
                 Mute(
-                    mute["infraction_id"],
+                    self.db.infractions.find_by_id_only(mute["infraction_id"]),
                     mute["end_time"],
                     DBUser(mute["user_id"], mute["user_name"]),
                 )
@@ -537,7 +571,7 @@ class Guilds(IGuilds):
                     guild["id"],
                     guild["mod_log"],
                     guild["public_log"],
-                    DurationType(guild["duration_type"]),
+                    DurationType(guild["duration_type"]) if guild["duration_type"] else None,
                     guild["duration"],
                     guild["mute_role"],
                 )
@@ -550,24 +584,24 @@ class Guilds(IGuilds):
         if retrieved_guild:
             try:
                 self.conn.execute(
-                    "UPDATE guilds SET "
-                    "mod_log=:mod_log,"
+                    "UPDATE guilds "
+                    "SET mod_log=:mod_log,"
                     "public_log=:public_log,"
                     "duration_type=:duration_type,"
                     "duration=:duration,"
-                    "mute_role=:mute_role"
-                    "WHERE id=guild_id",
+                    "mute_role=:mute_role "
+                    "WHERE id=:id",
                     {
                         "mod_log": guild.mod_log,
                         "public_log": guild.public_log,
-                        "duration_type": guild.duration_type,
+                        "duration_type": guild.duration_type.value,
                         "duration": guild.duration,
                         "mute_role": guild.mute_role,
-                        "guild_id": guild.id,
+                        "id": guild.id,
                     },
                 )
                 self.conn.commit()
-            except sqlite3.DatabaseError:
+            except sqlite3.DatabaseError as error:
                 pass
         else:
             try:
@@ -575,7 +609,7 @@ class Guilds(IGuilds):
                     guild.id,
                     guild.mod_log,
                     guild.public_log,
-                    guild.duration_type,
+                    guild.duration_type.value,
                     guild.duration,
                     guild.mute_role,
                 )
@@ -706,7 +740,7 @@ class PublishedMessages(IPublishedMessages):
             publish = self.conn.execute(
                 "SELECT * FROM published_messages WHERE infraction_id=:infraction_id "
                 "AND publish_type=:publish_type",
-                {"infraction_id": infraction_id, "publish_type": publish_type},
+                {"infraction_id": infraction_id, "publish_type": publish_type.value},
             ).fetchone()
         except sqlite3.DatabaseError:
             pass
@@ -714,7 +748,7 @@ class PublishedMessages(IPublishedMessages):
             PublishedMessage(
                 publish["infraction_id"],
                 publish["message_id"],
-                PublishType(publish.publishtype),
+                PublishType(publish["publish_type"]),
             )
             if publish
             else None
@@ -725,7 +759,7 @@ class PublishedMessages(IPublishedMessages):
             values = (
                 published_ban.infraction_id,
                 published_ban.message_id,
-                published_ban.publish_type,
+                published_ban.publish_type.value,
             )
             sql = (
                 "INSERT INTO published_messages (infraction_id, message_id, publish_type) "

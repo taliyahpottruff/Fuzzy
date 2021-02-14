@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import timedelta, datetime
 from typing import List, Optional
 
 import discord
@@ -25,9 +25,8 @@ class Mutes(Fuzzy.Cog):
             # noinspection PyTypeChecker
             mute_role: discord.Role = None
             if guild:
-                user = guild.get_member(mute.user.id)
+                user = await guild.fetch_member(mute.user.id)
                 mute_role = guild.get_role(mute.infraction.guild.mute_role)
-
             if user and mute_role:
                 await user.remove_roles(mute_role)
             self.bot.db.mutes.delete(mute.infraction.id)
@@ -43,6 +42,7 @@ class Mutes(Fuzzy.Cog):
         ctx: Fuzzy.Context,
         who: commands.Greedy[discord.Member],
         time: ParseableTimedelta,
+        *,
         reason: Optional[str],
     ):
         """Mutes users for the specified amount of time.
@@ -54,12 +54,18 @@ class Mutes(Fuzzy.Cog):
         Number first, and type second i.e.`5h` for 5 hours
 
         `reason` is the reason for the mute. This is optional and can be updated later with `${pfx}reason`"""
+
+        if isinstance(time, timedelta):
+            if time == timedelta():
+                raise commands.BadArgument("Time difference may not be zero.")
+
         muted_members = []
-        all_errors = []
-        mute_role: discord.Role = ctx.guild.fetch_role(
+        mute_role: discord.Role = ctx.guild.get_role(
             ctx.db.guilds.find_by_id(ctx.guild.id).mute_role
         )
-
+        if not mute_role:
+            await ctx.reply("Could not find a mute role for this server.", color=ctx.Color.I_GUESS)
+            return
         for member in who:  # type: discord.Member
 
             active_mute = ctx.db.mutes.find_active_mute(member.id, ctx.guild.id)
@@ -79,23 +85,19 @@ class Mutes(Fuzzy.Cog):
                 ctx.db.mutes.save(mute)
 
                 await member.add_roles(mute_role)
-                muted_members.append(member.mention)
-            else:
-                all_errors.append(member.mention)
+                muted_members.append(f"{member.mention}: Warning **ID {infraction.id}**")
 
-        msg = ""
-        if all_errors:
-            msg += "Error muting: " + " ".join(all_errors) + "\n"
-        if muted_members:
-            msg += (
-                f"Muted the following members for {reason}: {' '.join(muted_members)}"
-            )
-
-        await ctx.reply(msg, color=ctx.Color.BAD)
+        mute_string = "\n".join(muted_members)
+        await ctx.reply(
+            title="Mute",
+            msg=(f"**Reason:** {reason}\n" if reason else "") + f"{mute_string}",
+            color=ctx.Color.BAD,
+        )
         await self.bot.post_log(
             ctx.guild,
-            msg=f"{ctx.author.name}#{ctx.author.discriminator} "
-            f"muted {' '.join(muted_members)} for {reason}",
+            title="Mute",
+            msg=f"Mod: {ctx.author.name}#{ctx.author.discriminator}\n" +
+            (f"**Reason:** {reason}\n" if reason else "") + f"{mute_string}",
             color=ctx.Color.BAD,
         )
 
@@ -111,7 +113,7 @@ class Mutes(Fuzzy.Cog):
             if active_mute:
                 ctx.db.mutes.delete(active_mute.infraction.id)
 
-            mute_role: discord.Role = ctx.guild.fetch_role(
+            mute_role: discord.Role = ctx.guild.get_role(
                 ctx.db.guilds.find_by_id(ctx.guild.id).mute_role
             )
 

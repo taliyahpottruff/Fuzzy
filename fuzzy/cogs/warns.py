@@ -13,6 +13,7 @@ class Warns(Fuzzy.Cog):
         self,
         ctx: Fuzzy.Context,
         who: commands.Greedy[discord.Member],
+        *,
         reason: Optional[str] = "",
     ):
         """Issue a warning to a user.
