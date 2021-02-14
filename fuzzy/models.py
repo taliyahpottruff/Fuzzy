@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 from enum import Enum
 
 import discord
@@ -14,9 +14,9 @@ class DurationType(Enum):
 
 
 class InfractionType(Enum):
-    WARN = 1
-    MUTE = 2
-    BAN = 3
+    WARN = "Warn"
+    MUTE = "Mute"
+    BAN = "Ban"
 
 
 class PublishType(Enum):
@@ -32,6 +32,14 @@ class GuildSettings(object):
     duration_type: DurationType
     duration: int
     mute_role: int
+
+    def infraction_expired_time(self) -> datetime:
+        if self.duration_type == DurationType.DAYS:
+            return datetime.utcnow() - timedelta(days=self.duration)
+        if self.duration_type == DurationType.MONTHS:
+            return datetime.utcnow() - timedelta(days=(self.duration * 30))
+        if self.duration_type == DurationType.YEARS:
+            return datetime.utcnow() - timedelta(days=(self.duration * 365))
 
 
 @dataclass()
@@ -83,7 +91,7 @@ class Infraction(object):
             None,
             DBUser(who.id, f"{who.name}#{who.discriminator}"),
             DBUser(ctx.author.id, f"{ctx.author.name}#{ctx.author.discriminator}"),
-            ctx.guild.id,
+            ctx.db.guilds.find_by_id(ctx.guild.id),
             reason,
             datetime.utcnow(),
             infraction_type,

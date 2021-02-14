@@ -3,8 +3,8 @@ PRAGMA foreign_keys = ON;
 -- Schema Version 1
 
 -- Database Metadata
-CREATE TABLE IF NOT EXISTS meta (
-    version INTEGER PRIMARY KEY
+CREATE TABLE IF NOT EXISTS applied_migrations (
+    number INTEGER PRIMARY KEY
 );
 
 -- Guild Application Settings
@@ -27,7 +27,7 @@ CREATE TABLE IF NOT EXISTS infractions (
     guild_id        INTEGER     NOT NULL,
     reason          TEXT,
     infraction_on   timestamp   NOT NULL,
-    infraction_type integer     NOT NULL CHECK(infraction_type == 1 OR infraction_type == 2 OR infraction_type == 3),
+    infraction_type TEXT     NOT NULL CHECK(infraction_type == 1 OR infraction_type == 2 OR infraction_type == 3),
 
     FOREIGN KEY(guild_id) REFERENCES guilds(id)
 );
@@ -38,7 +38,7 @@ CREATE TABLE IF NOT EXISTS pardons (
     moderator_id    INTEGER     NOT NULL,
     moderator_name  TEXT        NOT NULL,
     pardon_on       timestamp   NOT NULL,
-    reason          text,
+    reason          TEXT,
 
     FOREIGN KEY(infraction_id) REFERENCES infractions(oid)
 );
@@ -64,8 +64,8 @@ CREATE TABLE IF NOT EXISTS published_messages (
 
 -- Locked Channels
 CREATE TABLE IF NOT EXISTS locks (
-    channel_id      INTEGER     NOT NULL,
-    previous_value  integer     CHECK(previous_value == 1 OR previous_value == 0) ,--Bool + Null
+    channel_id      INTEGER     PRIMARY KEY,
+    previous_value  INTEGER     CHECK(previous_value == 1 OR previous_value == 0) ,--Bool + Null
     moderator_id    INTEGER     NOT NULL,
     moderator_name  TEXT        NOT NULL,
     guild_id        INTEGER     NOT NULL,
@@ -75,7 +75,3 @@ CREATE TABLE IF NOT EXISTS locks (
     FOREIGN KEY(guild_id) REFERENCES guilds(id)
 )
 
-
--- Set Database Version
-DELETE FROM meta;
-INSERT INTO meta VALUES (0);

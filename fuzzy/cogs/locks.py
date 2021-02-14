@@ -50,20 +50,21 @@ class Locks(Fuzzy.Cog):
         if not channels:
             channels = [ctx.channel]
         for channel in channels:
-            ctx.db.locks.save(
-                Lock(
-                    channel.id or ctx.channel.id,
-                    channel.overwrites_for(everyone_role).read_messages,
-                    DBUser(
-                        ctx.author.id, f"{ctx.author.name}#{ctx.author.discriminator}"
-                    ),
-                    ctx.guild.id,
-                    reason,
-                    datetime.utcnow() + time,
+            if channel in ctx.guild.channels:
+                ctx.db.locks.save(
+                    Lock(
+                        channel.id or ctx.channel.id,
+                        channel.overwrites_for(everyone_role).read_messages,
+                        DBUser(
+                            ctx.author.id, f"{ctx.author.name}#{ctx.author.discriminator}"
+                        ),
+                        ctx.db.guilds.find_by_id(ctx.guild.id),
+                        reason,
+                        datetime.utcnow() + time,
+                    )
                 )
-            )
-            locks.append(f"{channel.mention}")
-            await channel.set_permissions(everyone_role, send_messages=False)
+                locks.append(f"{channel.mention}")
+                await channel.set_permissions(everyone_role, send_messages=False)
         if not locks:
             await ctx.reply("Could not find any channels with those IDs.")
             return
@@ -85,12 +86,13 @@ class Locks(Fuzzy.Cog):
         if not channels:
             channels = [ctx.channel]
         for channel in channels:
-            lock = ctx.db.locks.find_by_id(channel.id)
-            await channel.set_permissions(
-                everyone_role, send_message=lock.previous_value
-            )
-            ctx.db.locks.delete(lock.channel_id)
-            unlocks.append(channel.mention)
+            if channel in ctx.guild.channels:
+                lock = ctx.db.locks.find_by_id(channel.id)
+                await channel.set_permissions(
+                    everyone_role, send_message=lock.previous_value
+                )
+                ctx.db.locks.delete(lock.channel_id)
+                unlocks.append(channel.mention)
         if not unlocks:
             await ctx.reply("Could not find any channels with those IDs.")
             return

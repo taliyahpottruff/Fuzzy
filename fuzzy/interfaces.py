@@ -1,25 +1,50 @@
 import sqlite3
 from abc import ABC, abstractmethod
-from typing import TextIO, List
+from typing import List, Dict
 
 from fuzzy.models import *
 
 
 class IInfractions(ABC):
+    """Manages the infraction section of the database."""
+
     @abstractmethod
     def find_by_id(self, infraction_id: int, guild_id: int) -> Infraction:
+        """Finds an infraction when given an infraction_id and guild_id"""
         pass
 
     @abstractmethod
     def save(self, infraction: Infraction) -> Infraction:
+        """Saves an infraction into the database. If infraction already exists then updates the saved instance."""
         pass
 
     @abstractmethod
     def delete(self, infraction_id: int) -> None:
+        """Deletes an infraction from the database."""
         pass
 
     @abstractmethod
     def find_recent_ban_by_id(self, user_id, guild_id) -> Infraction:
+        pass
+
+    @abstractmethod
+    def find_all_for_user(self, user_id: int, guild_id: int) -> List[Infraction]:
+        pass
+
+    @abstractmethod
+    def find_warns_for_user(self, user_id: int, guild_id: int) -> List[Infraction]:
+        pass
+
+    @abstractmethod
+    def find_mutes_for_user(self, user_id: int, guild_id: int) -> List[Infraction]:
+        pass
+
+    @abstractmethod
+    def find_bans_for_user(self, user_id: int, guild_id: int) -> List[Infraction]:
+        pass
+
+    @abstractmethod
+    def find_mod_actions(self, moderator_id, guild_id) -> Dict:
         pass
 
 
@@ -83,7 +108,7 @@ class ILocks(ABC):
         pass
 
     @abstractmethod
-    def save(self, mute: Lock) -> Lock:
+    def save(self, lock: Lock) -> Lock:
         pass
 
     @abstractmethod
@@ -94,7 +119,7 @@ class ILocks(ABC):
 class IPublishedMessages(ABC):
     @abstractmethod
     def find_by_id_and_type(
-        self, infraction_id: int, publish_type: PublishType
+            self, infraction_id: int, publish_type: PublishType
     ) -> PublishedMessage:
         pass
 
@@ -103,14 +128,20 @@ class IPublishedMessages(ABC):
         pass
 
     @abstractmethod
-    def delete(self, guild_id: int) -> None:
+    def delete_with_type(self, infraction_id: int, infraction_type) -> None:
+        pass
+
+    @abstractmethod
+    def delete_all_with_id(self, infraction_id: int):
         pass
 
 
 class IDatabase(ABC):
-    @abstractmethod
-    def __init__(self, config, schema_file: TextIO):
+    """Manages the creation and migration of the database and passes the connection to the submodules"""
 
+    @abstractmethod
+    def __init__(self, config):
+        self.config = config
         self.conn: sqlite3.Connection
         self.infractions: IInfractions = IInfractions()
         self.pardons: IPardons = IPardons()

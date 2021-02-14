@@ -23,7 +23,7 @@ class Bans(Fuzzy.Cog):
                     None,
                     DBUser(user.id, f"{user.name}#{user.discriminator}"),
                     DBUser(0, "Unknown#????"),
-                    guild.id,
+                    self.bot.db.guilds.find_by_id(guild.id),
                     "",
                     datetime.utcnow(),
                     InfractionType.BAN,

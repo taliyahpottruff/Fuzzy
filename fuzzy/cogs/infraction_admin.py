@@ -46,8 +46,9 @@ class InfractionAdmin(Fuzzy.Cog):
                         embed=InfractionAdmin.create_ban_embed(infraction)
                     )
                 else:
+                    ctx.db.published_messages.delete_with_type(infraction.id, infraction.published_ban.publish_type)
                     infraction.published_ban = None
-                    ctx.db.published_messages.delete(infraction.id)
+
             pardon = Pardon(
                 infraction.id,
                 DBUser(ctx.author.id, f"{ctx.author.name}#{ctx.author.discriminator}"),
@@ -154,8 +155,8 @@ class InfractionAdmin(Fuzzy.Cog):
                         embed=InfractionAdmin.create_ban_embed(infraction)
                     )
                 else:
+                    ctx.db.published_messages.delete_with_type(infraction.id, infraction.published_ban.publish_type)
                     infraction.published_ban = None
-                    ctx.db.published_messages.delete(infraction.id)
 
         if all_errors:
             msg = "Error Updating Reason: " + " ".join(all_errors)

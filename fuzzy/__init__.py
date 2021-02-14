@@ -10,6 +10,7 @@ from typing import Optional
 import discord
 from discord.ext import commands
 
+from fuzzy.databases import Database
 from fuzzy.fuzzy import Fuzzy, AnticipatedError, Unauthorized, PleaseRestate
 from fuzzy.interfaces import IDatabase
 from . import cogs
@@ -30,7 +31,7 @@ intents = discord.Intents.default()
 intents.members = True
 
 # noinspection PyTypeChecker
-database: IDatabase = None
+database: IDatabase = Database(config)
 
 bot = Fuzzy(
     config,
@@ -51,7 +52,6 @@ def process_docstrings(text) -> str:
         r"\1 ",
         Template(text).safe_substitute(
             {
-                "manual": bot.config["info"]["manual"],
                 "pfx": bot.config["discord"]["prefix"],
             }
         ),
@@ -95,11 +95,10 @@ async def _help(ctx: Fuzzy.Context, *, subject: Optional[str]):
 
     if not subject:
         embed.description = process_docstrings(
-            f"""This is the *[Fuzzy]({ctx.bot.config['info']['web']}), a general-purpose moderation bot for Discord.
+            f"""This is the *[Fuzzy]({ctx.bot.config['info']['source']}), a general-purpose moderation bot for Discord.
 
 
-            For detailed help on any command, you can use `{signature(_help)}`. You may also find
-            useful, but largely supplemental, information in the **[online manual]($manual)**. Fuzz
+            For detailed help on any command, you can use `{signature(_help)}`. Fuzzy
             is [open-source]({ctx.bot.config['info']['source']}). This instance runs version
             {metadata.version('fuzzy')} and is active on {len(ctx.bot.guilds)} servers with
             {len(ctx.bot.users)} members."""
