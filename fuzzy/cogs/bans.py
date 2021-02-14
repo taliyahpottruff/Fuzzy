@@ -10,7 +10,7 @@ from fuzzy.models import Infraction, InfractionType, DBUser
 
 
 class Bans(Fuzzy.Cog):
-    @commands.Cog.listener
+    @commands.Cog.listener()
     async def on_member_ban(self, guild: discord.Guild, user: discord.User):
         await asyncio.sleep(5.0)
 
@@ -47,7 +47,7 @@ class Bans(Fuzzy.Cog):
             ),
         )
 
-    @commands.Cog.listener
+    @commands.Cog.listener()
     async def on_member_unban(self, guild: discord.Guild, user: discord.User):
         infraction = self.bot.db.infractions.find_recent_ban_by_id(user.id, guild.id)
 

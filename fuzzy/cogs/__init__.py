@@ -3,3 +3,6 @@ from .mutes import Mutes
 from .warns import Warns
 from .bans import Bans
 from .locks import Locks
+from .admin import Admin
+from .purge import Purges
+from .logs import Logs

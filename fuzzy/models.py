@@ -4,8 +4,6 @@ from enum import Enum
 
 import discord
 
-from fuzzy import Fuzzy
-
 
 class DurationType(Enum):
     DAYS = 1
@@ -78,11 +76,7 @@ class Infraction(object):
 
     @classmethod
     def create(
-        cls,
-        ctx: Fuzzy.Context,
-        who: discord.Member,
-        reason: str,
-        infraction_type: InfractionType,
+        cls, ctx, who: discord.Member, reason: str, infraction_type: InfractionType,
     ):
         """Creates a new Infraction ready to be stored in DB.
         This will not have id pardon or published_ban attributes. Use normal constructor if those are required"""

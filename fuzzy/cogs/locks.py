@@ -5,7 +5,7 @@ import discord
 from discord.ext import tasks, commands
 
 from fuzzy import Fuzzy
-from fuzzy.fuzzy import ParseableTimedelta
+from fuzzy.customizations import ParseableTimedelta
 from fuzzy.models import Lock, DBUser
 
 
@@ -41,64 +41,58 @@ class Locks(Fuzzy.Cog):
     async def lock(
         self,
         ctx: Fuzzy.Context,
-        channels: Optional[commands.Greedy[discord.TextChannel]],
+        channel: Optional[discord.TextChannel],
         time: ParseableTimedelta,
         reason: Optional[str] = "",
     ):
-        locks = []
+        lock = None
         everyone_role: discord.Role = ctx.guild.get_role(ctx.guild.id)
-        if not channels:
-            channels = [ctx.channel]
-        for channel in channels:
-            if channel in ctx.guild.channels:
-                ctx.db.locks.save(
-                    Lock(
-                        channel.id or ctx.channel.id,
-                        channel.overwrites_for(everyone_role).read_messages,
-                        DBUser(
-                            ctx.author.id, f"{ctx.author.name}#{ctx.author.discriminator}"
-                        ),
-                        ctx.db.guilds.find_by_id(ctx.guild.id),
-                        reason,
-                        datetime.utcnow() + time,
-                    )
+        if not channel:
+            channel = ctx.channel
+        if channel in ctx.guild.channels:
+            lock = ctx.db.locks.save(
+                Lock(
+                    channel.id or ctx.channel.id,
+                    channel.overwrites_for(everyone_role).read_messages,
+                    DBUser(
+                        ctx.author.id, f"{ctx.author.name}#{ctx.author.discriminator}"
+                    ),
+                    ctx.db.guilds.find_by_id(ctx.guild.id),
+                    reason,
+                    datetime.utcnow() + time,
                 )
-                locks.append(f"{channel.mention}")
-                await channel.set_permissions(everyone_role, send_messages=False)
-        if not locks:
-            await ctx.reply("Could not find any channels with those IDs.")
+            )
+            await channel.set_permissions(everyone_role, send_messages=False)
+        if not lock:
+            await ctx.reply("Could not find a channel with those IDs.")
             return
-        await ctx.reply(f"Locked the following channels for {time}: {' '.join(locks)}")
+        await ctx.reply(f"Locked {channel.mention} for {time}")
         await self.bot.post_log(
             ctx.guild,
             msg=f"{ctx.author.name}#{ctx.author.discriminator} "
-            f"locked {' '.join(locks)} for {time} for {reason}",
+            f"locked {channel.mention} for {time} for {reason}",
         )
 
     @commands.command()
     async def unlock(
-        self,
-        ctx: Fuzzy.Context,
-        channels: Optional[commands.Greedy[discord.TextChannel]],
+        self, ctx: Fuzzy.Context, channel: Optional[discord.TextChannel],
     ):
-        unlocks = []
+        lock = None
         everyone_role: discord.Role = ctx.guild.get_role(ctx.guild.id)
-        if not channels:
-            channels = [ctx.channel]
-        for channel in channels:
-            if channel in ctx.guild.channels:
-                lock = ctx.db.locks.find_by_id(channel.id)
-                await channel.set_permissions(
-                    everyone_role, send_message=lock.previous_value
-                )
-                ctx.db.locks.delete(lock.channel_id)
-                unlocks.append(channel.mention)
-        if not unlocks:
-            await ctx.reply("Could not find any channels with those IDs.")
+        if not channel:
+            channel = [ctx.channel]
+        if channel in ctx.guild.channels:
+            lock = ctx.db.locks.find_by_id(channel.id)
+            await channel.set_permissions(
+                everyone_role, send_message=lock.previous_value
+            )
+            ctx.db.locks.delete(lock.channel_id)
+        if not lock:
+            await ctx.reply("Could not find a channel with that ID.")
             return
-        await ctx.reply(f"Unlocked the following channels: {' '.join(unlocks)}")
+        await ctx.reply(f"Unlocked {channel.mention}")
         await self.bot.post_log(
             ctx.guild,
             msg=f"{ctx.author.name}#{ctx.author.discriminator} "
-            f"unlocked {' '.join(unlocks)}",
+            f"unlocked {channel.mention}",
         )

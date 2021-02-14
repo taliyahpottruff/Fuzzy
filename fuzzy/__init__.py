@@ -10,16 +10,16 @@ from typing import Optional
 import discord
 from discord.ext import commands
 
-from fuzzy.databases import Database
-from fuzzy.fuzzy import Fuzzy, AnticipatedError, Unauthorized, PleaseRestate
-from fuzzy.interfaces import IDatabase
-from . import cogs
+from databases import Database
+from customizations import Fuzzy, AnticipatedError, Unauthorized, PleaseRestate
+from fuzzy import cogs
+from databases import Database
 
 config = ConfigParser()
-config.read("fuzzy.cfg")
+config.read("../fuzzy.cfg")
 
 logging.basicConfig(
-    style="{", format="{levelname} {name}: {message}", level=config["log"]["level"]
+    format="%(levelname) %(name): %(message)", level=config["log"]["level"]
 )
 
 for source in config["log"]["suppress"].split(","):
@@ -31,7 +31,7 @@ intents = discord.Intents.default()
 intents.members = True
 
 # noinspection PyTypeChecker
-database: IDatabase = Database(config)
+database: Database = Database(config)
 
 bot = Fuzzy(
     config,
@@ -41,7 +41,7 @@ bot = Fuzzy(
     help_command=None,
     intents=intents,
 )
-for cog in [cogs.Warns, cogs.InfractionAdmin, cogs.Bans]:
+for cog in [cogs.Warns, cogs.InfractionAdmin, cogs.Bans, cogs.Logs, cogs.Purges]:
     bot.add_cog(cog(bot))
 
 
@@ -50,11 +50,7 @@ def process_docstrings(text) -> str:
     return re.sub(
         r"(.+)\n *",
         r"\1 ",
-        Template(text).safe_substitute(
-            {
-                "pfx": bot.config["discord"]["prefix"],
-            }
-        ),
+        Template(text).safe_substitute({"pfx": bot.config["discord"]["prefix"],}),
     )
 
 

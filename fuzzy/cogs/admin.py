@@ -8,7 +8,7 @@ from fuzzy.models import DurationType
 
 
 class Admin(Fuzzy.Cog):
-    @commands.Group()
+    @commands.group()
     async def admin(self, ctx: Fuzzy.Context):
         """Administration Module for bot. Updates the various settings for this server."""
 

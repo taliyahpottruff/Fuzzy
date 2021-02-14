@@ -2,7 +2,7 @@ from typing import Optional
 
 from discord.ext import commands
 
-from fuzzy.fuzzy import UnableToComply
+from fuzzy.customizations import UnableToComply, Fuzzy
 from fuzzy.models import *
 
 
@@ -46,7 +46,9 @@ class InfractionAdmin(Fuzzy.Cog):
                         embed=InfractionAdmin.create_ban_embed(infraction)
                     )
                 else:
-                    ctx.db.published_messages.delete_with_type(infraction.id, infraction.published_ban.publish_type)
+                    ctx.db.published_messages.delete_with_type(
+                        infraction.id, infraction.published_ban.publish_type
+                    )
                     infraction.published_ban = None
 
             pardon = Pardon(
@@ -155,7 +157,9 @@ class InfractionAdmin(Fuzzy.Cog):
                         embed=InfractionAdmin.create_ban_embed(infraction)
                     )
                 else:
-                    ctx.db.published_messages.delete_with_type(infraction.id, infraction.published_ban.publish_type)
+                    ctx.db.published_messages.delete_with_type(
+                        infraction.id, infraction.published_ban.publish_type
+                    )
                     infraction.published_ban = None
 
         if all_errors:

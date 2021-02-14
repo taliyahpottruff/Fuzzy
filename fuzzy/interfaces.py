@@ -1,8 +1,7 @@
-import sqlite3
 from abc import ABC, abstractmethod
 from typing import List, Dict
 
-from fuzzy.models import *
+from models import *
 
 
 class IInfractions(ABC):
@@ -119,7 +118,7 @@ class ILocks(ABC):
 class IPublishedMessages(ABC):
     @abstractmethod
     def find_by_id_and_type(
-            self, infraction_id: int, publish_type: PublishType
+        self, infraction_id: int, publish_type: PublishType
     ) -> PublishedMessage:
         pass
 
@@ -134,18 +133,3 @@ class IPublishedMessages(ABC):
     @abstractmethod
     def delete_all_with_id(self, infraction_id: int):
         pass
-
-
-class IDatabase(ABC):
-    """Manages the creation and migration of the database and passes the connection to the submodules"""
-
-    @abstractmethod
-    def __init__(self, config):
-        self.config = config
-        self.conn: sqlite3.Connection
-        self.infractions: IInfractions = IInfractions()
-        self.pardons: IPardons = IPardons()
-        self.mutes: IMutes = IMutes()
-        self.guilds: IGuilds = IGuilds()
-        self.locks: ILocks = ILocks()
-        self.published_messages: IPublishedMessages = IPublishedMessages()
