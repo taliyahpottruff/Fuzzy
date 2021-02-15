@@ -28,6 +28,7 @@ class InfractionAdmin(Fuzzy.Cog):
                 infraction_id, ctx.guild.id
             )
             if infraction:
+                infraction.pardon.reason = reason
                 all_infractions.append(infraction)
             else:
                 all_errors.append(f"{infraction_id}")
@@ -37,19 +38,22 @@ class InfractionAdmin(Fuzzy.Cog):
 
         for infraction in all_infractions:
             if (
-                infraction.infraction_type == InfractionType.BAN
+                infraction.infraction_type.value == InfractionType.BAN.value
                 and infraction.published_unban
             ):
-                message: discord.Message = ctx.author.fetch_message(
-                    infraction.published_ban.message_id
+                channel: discord.TextChannel = ctx.guild.get_channel(
+                    ctx.db.guilds.find_by_id(ctx.guild.id).public_log
+                )
+                message: discord.Message = await channel.fetch_message(
+                    infraction.published_unban.message_id
                 )
                 if message:
                     await message.edit(
-                        embed=InfractionAdmin.create_ban_embed(infraction)
+                        embed=InfractionAdmin.create_unban_embed(infraction)
                     )
                 else:
                     ctx.db.published_messages.delete_with_type(
-                        infraction.id, infraction.published_ban.publish_type
+                        infraction.id, infraction.published_unban.publish_type
                     )
                     infraction.published_ban = None
 
@@ -123,7 +127,7 @@ class InfractionAdmin(Fuzzy.Cog):
 
     @commands.command()
     async def reason(
-        self, ctx: Fuzzy.Context, infraction_ids: commands.Greedy[int], reason: str
+        self, ctx: Fuzzy.Context, infraction_ids: commands.Greedy[int], *, reason: str
     ):
         """Updates the reason of a user's infraction. This will also update the reason posted in the public ban
         log if if has been `${pfx}publish`ed.
@@ -148,10 +152,13 @@ class InfractionAdmin(Fuzzy.Cog):
             infraction.reason = reason
             ctx.db.infractions.save(infraction)
             if (
-                infraction.infraction_type == InfractionType.BAN
+                infraction.infraction_type.value == InfractionType.BAN.value
                 and infraction.published_ban
             ):
-                message: discord.Message = ctx.author.fetch_message(
+                channel: discord.TextChannel = ctx.guild.get_channel(
+                    ctx.db.guilds.find_by_id(ctx.guild.id).public_log
+                )
+                message: discord.Message = await channel.fetch_message(
                     infraction.published_ban.message_id
                 )
                 if message:
@@ -171,10 +178,10 @@ class InfractionAdmin(Fuzzy.Cog):
             msg = ""
             for infraction in all_infractions:
                 msg += f"{infraction.id} "
-            await ctx.reply(f"**Updated Reason to {reason} for: {msg}")
+            await ctx.reply(f"Updated Reason to '{reason}' for: {msg}")
             await self.bot.post_log(
                 ctx.guild,
-                msg=f"{ctx.author.name}#{ctx.author.discriminator} updated reason to {reason} of {msg}",
+                msg=f"{ctx.author.name}#{ctx.author.discriminator} updated reason to '{reason}' of {msg}",
             )
 
     @commands.group()
@@ -359,16 +366,18 @@ class InfractionAdmin(Fuzzy.Cog):
     def create_ban_embed(infraction: Infraction):
         """Creates an embed for bans"""
         return discord.Embed(
+            title="Ban",
             description=f"**Date:** {infraction.infraction_on.strftime('%Y-%m-%d')}\n"
             f"**User:** {infraction.user.name}\n"
-            f"**Reason:** {infraction.reason}"
+            f"**Reason:** {infraction.reason}",
         )
 
     @staticmethod
     def create_unban_embed(infraction: Infraction):
         """Creates an embed for unbans"""
         return discord.Embed(
+            title="Unban",
             description=f"**Date:** {infraction.pardon.pardon_on.strftime('%Y-%m-%d')}\n"
             f"**User:** {infraction.user.name}\n"
-            f"**Reason:** {infraction.pardon.reason}"
+            f"**Reason:** {infraction.pardon.reason}",
         )
