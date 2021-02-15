@@ -18,4 +18,3 @@ class PleaseRestate(AnticipatedError):
     """We didn't understand what the user wants."""
 
     TEXT = "Please restate query."
-

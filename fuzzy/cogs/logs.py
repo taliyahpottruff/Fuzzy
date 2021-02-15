@@ -17,7 +17,7 @@ class Logs(Fuzzy.Cog):
         """Displays all Infractions of the specified user.
         `who` is the person to grab the infractions for. This can be a mention, ID or name."""
         all_infraction: List[Infraction] = ctx.db.infractions.find_all_for_user(
-            who.id, ctx.guild
+            who.id, ctx.guild.id
         )
         if not all_infraction:
             await ctx.reply("User does not have any infractions.")
@@ -32,12 +32,12 @@ class Logs(Fuzzy.Cog):
             )
             await ctx.send(embed=embed)
 
-    @commands.command(parent=logs)
+    @commands.command(parent=logs, aliases=["warn"])
     async def warns(self, ctx: Fuzzy.Context, who: discord.User):
         """Displays all warns of the specified user.
         `who` is the person to grab the warns for. This can be a mention, ID or name."""
         all_infraction: List[Infraction] = ctx.db.infractions.find_warns_for_user(
-            who.id, ctx.guild
+            who.id, ctx.guild.id
         )
         if not all_infraction:
             await ctx.reply("User does not have any warns.")
@@ -52,12 +52,12 @@ class Logs(Fuzzy.Cog):
             )
             await ctx.send(embed=embed)
 
-    @commands.command(parent=logs)
+    @commands.command(parent=logs, aliases=["mute"])
     async def mutes(self, ctx: Fuzzy.Context, who: discord.User):
         """Displays all mutes of the specified user.
          who` is the person to grab the mutes for. This can be a mention, ID or name."""
         all_infraction: List[Infraction] = ctx.db.infractions.find_mutes_for_user(
-            who.id, ctx.guild
+            who.id, ctx.guild.id
         )
         if not all_infraction:
             await ctx.reply("User does not have any mutes.")
@@ -72,12 +72,12 @@ class Logs(Fuzzy.Cog):
             )
             await ctx.send(embed=embed)
 
-    @commands.command(parent=logs)
+    @commands.command(parent=logs, aliases=["ban"])
     async def bans(self, ctx: Fuzzy.Context, who: discord.User):
         """Displays all bans of the specified user.
           `who` is the person to grab the bans for. This can be a mention, ID or name."""
         all_infraction: List[Infraction] = ctx.db.infractions.find_bans_for_user(
-            who.id, ctx.guild
+            who.id, ctx.guild.id
         )
         if not all_infraction:
             await ctx.reply("User does not have any bans.")
@@ -111,15 +111,15 @@ class Logs(Fuzzy.Cog):
         for infraction in infractions:
             msg = (
                 f"**{infraction.id} : {infraction.infraction_type.value}** : "
-                f"{infraction.infraction_on.strftime('%b %d, %y at %r:%m %p')}\n"
+                f"{infraction.infraction_on.strftime('%b %d, %y at %I:%m %p')}\n"
                 f"Reason: {infraction.reason}\n"
                 f"Moderator: {infraction.moderator.name}\n"
             )
             if infraction.pardon:
                 msg = (
                     f"~~{msg}~~"
-                    f"Pardoned by: {infraction.pardon.moderator.name} on "
-                    f"{infraction.pardon.pardon_on.strftime('%b %d, %y at %r:%m %p')}"
+                    f"**Pardoned by: {infraction.pardon.moderator.name} on "
+                    f"{infraction.pardon.pardon_on.strftime('%b %d, %y at %I:%m %p')}**\n"
                 )
             fields.append(msg)
         return fields
@@ -136,4 +136,6 @@ class Logs(Fuzzy.Cog):
             else:
                 list_to_return.append(msg)
                 msg = ""
+            if not incoming_list:
+                list_to_return.append(msg)
         return list_to_return

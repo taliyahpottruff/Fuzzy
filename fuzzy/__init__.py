@@ -43,7 +43,14 @@ bot = Fuzzy(
     help_command=None,
     intents=intents,
 )
-for cog in [cogs.Warns, cogs.InfractionAdmin, cogs.Bans, cogs.Logs, cogs.Purges, cogs.Admin]:
+for cog in [
+    cogs.Warns,
+    cogs.InfractionAdmin,
+    cogs.Bans,
+    cogs.Logs,
+    cogs.Purges,
+    cogs.Admin,
+]:
     bot.add_cog(cog(bot))
 
 
@@ -52,7 +59,7 @@ def process_docstrings(text) -> str:
     return re.sub(
         r"(.+)\n *",
         r"\1 ",
-        Template(text).safe_substitute({"pfx": bot.config["discord"]["prefix"], }),
+        Template(text).safe_substitute({"pfx": bot.config["discord"]["prefix"],}),
     )
 
 
@@ -80,14 +87,7 @@ async def on_ready():
             if not guild_settings:
                 # noinspection PyTypeChecker
                 bot.db.guilds.save(
-                    GuildSettings(
-                        guild.id,
-                        None,
-                        None,
-                        DurationType.YEARS,
-                        30,
-                        None,
-                    )
+                    GuildSettings(guild.id, None, None, DurationType.YEARS, 30, None,)
                 )
 
 
@@ -97,14 +97,7 @@ async def on_guild_join(guild: discord.Guild):
     if not guild_settings:
         # noinspection PyTypeChecker
         bot.db.guilds.save(
-            GuildSettings(
-                guild.id,
-                None,
-                None,
-                DurationType.YEARS,
-                30,
-                None,
-            )
+            GuildSettings(guild.id, None, None, DurationType.YEARS, 30, None,)
         )
 
 
@@ -143,14 +136,20 @@ async def _help(ctx: Fuzzy.Context, *, subject: Optional[str]):
         for cmd in sorted(ctx.bot.walk_commands(), key=lambda x: x.qualified_name):
             if cmd.__class__ == commands.Command:
                 if not cmd.parent:
-                    standalone_commands += f"`{bot.command_prefix}{cmd.qualified_name}` "
+                    standalone_commands += (
+                        f"`{bot.command_prefix}{cmd.qualified_name}` "
+                    )
                 else:
                     if previous_group != cmd.parent:
-                        all_commands += f"\n**`{bot.command_prefix}{cmd.parent.name}`** "
+                        all_commands += (
+                            f"\n**`{bot.command_prefix}{cmd.parent.name}`** "
+                        )
                     all_commands += f"`{cmd.name}` "
 
                 previous_group = cmd.parent
-        embed.add_field(name="All Commands", value=standalone_commands + "\n" + all_commands)
+        embed.add_field(
+            name="All Commands", value=standalone_commands + "\n" + all_commands
+        )
 
     else:
         for command in ctx.bot.walk_commands():

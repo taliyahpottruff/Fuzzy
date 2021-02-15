@@ -113,7 +113,7 @@ class Admin(Fuzzy.Cog):
         """This refreshes the permissions of the mute role. It will go through every channel and
         category on the server and add this role as an override that blocks 'Send Messages' permissions"""
         guild = ctx.db.guilds.find_by_id(ctx.guild.id)
-        role = await ctx.guild.get_role(guild.mute_role)
+        role = ctx.guild.get_role(guild.mute_role)
         guild.mute_role = role.id
         ctx.db.guilds.save(guild)
 

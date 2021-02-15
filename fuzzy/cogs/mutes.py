@@ -64,7 +64,9 @@ class Mutes(Fuzzy.Cog):
             ctx.db.guilds.find_by_id(ctx.guild.id).mute_role
         )
         if not mute_role:
-            await ctx.reply("Could not find a mute role for this server.", color=ctx.Color.I_GUESS)
+            await ctx.reply(
+                "Could not find a mute role for this server.", color=ctx.Color.I_GUESS
+            )
             return
         for member in who:  # type: discord.Member
 
@@ -85,7 +87,9 @@ class Mutes(Fuzzy.Cog):
                 ctx.db.mutes.save(mute)
 
                 await member.add_roles(mute_role)
-                muted_members.append(f"{member.mention}: Warning **ID {infraction.id}**")
+                muted_members.append(
+                    f"{member.mention}: Warning **ID {infraction.id}**"
+                )
 
         mute_string = "\n".join(muted_members)
         await ctx.reply(
@@ -96,8 +100,9 @@ class Mutes(Fuzzy.Cog):
         await self.bot.post_log(
             ctx.guild,
             title="Mute",
-            msg=f"Mod: {ctx.author.name}#{ctx.author.discriminator}\n" +
-            (f"**Reason:** {reason}\n" if reason else "") + f"{mute_string}",
+            msg=f"Mod: {ctx.author.name}#{ctx.author.discriminator}\n"
+            + (f"**Reason:** {reason}\n" if reason else "")
+            + f"{mute_string}",
             color=ctx.Color.BAD,
         )
 

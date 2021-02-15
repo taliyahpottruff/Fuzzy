@@ -19,7 +19,7 @@ class Locks(Fuzzy.Cog):
         """Finds expired locks and unlocks them."""
         locks: List[Lock] = self.bot.db.locks.find_expired_locks()
         for lock in locks:
-            guild: discord.Guild = await self.bot.fetch_guild(lock.guild.id)
+            guild: discord.Guild = self.bot.get_guild(lock.guild.id)
             # noinspection PyTypeChecker
             channel: discord.TextChannel = None
             # noinspection PyTypeChecker
@@ -44,6 +44,7 @@ class Locks(Fuzzy.Cog):
         ctx: Fuzzy.Context,
         channel: Optional[discord.TextChannel],
         time: ParseableTimedelta,
+        *,
         reason: Optional[str] = "",
     ):
         """Prevents users from being able to speak in a channel.
@@ -72,9 +73,15 @@ class Locks(Fuzzy.Cog):
             )
             await channel.set_permissions(everyone_role, send_messages=False)
         if not lock:
-            await ctx.reply("Could not find a channel with those IDs.")
+            try:
+                await ctx.reply("Could not find a channel with those IDs.")
+            except discord.Forbidden:
+                pass
             return
-        await ctx.reply(f"Locked {channel.mention} for {time}")
+        try:
+            await ctx.reply(f"Locked {channel.mention} for {time}")
+        except discord.Forbidden:
+            pass
         await self.bot.post_log(
             ctx.guild,
             msg=f"{ctx.author.name}#{ctx.author.discriminator} "
@@ -90,15 +97,16 @@ class Locks(Fuzzy.Cog):
         lock = None
         everyone_role: discord.Role = ctx.guild.get_role(ctx.guild.id)
         if not channel:
-            channel = [ctx.channel]
+            channel = ctx.channel
+
         if channel in ctx.guild.channels:
             lock = ctx.db.locks.find_by_id(channel.id)
             await channel.set_permissions(
-                everyone_role, send_message=lock.previous_value
+                everyone_role, send_messages=lock.previous_value
             )
             ctx.db.locks.delete(lock.channel_id)
         if not lock:
-            await ctx.reply("Could not find a channel with that ID.")
+            await ctx.reply("Could not find a locked channel with that ID.")
             return
         await ctx.reply(f"Unlocked {channel.mention}")
         await self.bot.post_log(

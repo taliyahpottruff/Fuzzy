@@ -34,19 +34,23 @@ class Bans(Fuzzy.Cog):
                     None,
                 )
             )
-        msg = f"**Banned:** {infraction.user.name} (ID {infraction.user.id})\n" \
-              f"**Mod:** {infraction.moderator.name}\n" \
-              f"**Reason:** {infraction.reason or '(no reason specified)'}\n"
-        msg += (f"This can be published to the published to the public log channel with "
-                f"`{self.bot.command_prefix}publish ban {infraction.id}`"
-                if infraction.reason
-                else f"Reason can be updated with "
-                     f"`{self.bot.command_prefix}reason {infraction.id} <your reason here>`")
+        msg = (
+            f"**Banned:** {infraction.user.name} (ID {infraction.user.id})\n"
+            f"**Mod:** {infraction.moderator.name}\n"
+            f"**Reason:** {infraction.reason or '(no reason specified)'}\n"
+        )
+        msg += (
+            f"This can be published to the published to the public log channel with "
+            f"`{self.bot.command_prefix}publish ban {infraction.id}`"
+            if infraction.reason
+            else f"Reason can be updated with "
+            f"`{self.bot.command_prefix}reason {infraction.id} <your reason here>`"
+        )
         await self.bot.post_log(
             guild,
             title=f"Ban #{infraction.id}",
             msg=msg,
-            color=self.bot.Context.Color.BAD
+            color=self.bot.Context.Color.BAD,
         )
 
     @commands.Cog.listener()
@@ -58,18 +62,18 @@ class Bans(Fuzzy.Cog):
             guild,
             title=f"Unban  #{infraction.id}",
             msg=f"{user.name} (ID {user.id})\n"
-                f"`{self.bot.command_prefix}pardon {infraction.id} <reason>` to add an unban reason."
-                f"Then `{self.bot.command_prefix}publish unban {infraction.id}` to publish to public log channel.",
+            f"`{self.bot.command_prefix}pardon {infraction.id} <reason>` to add an unban reason."
+            f"Then `{self.bot.command_prefix}publish unban {infraction.id}` to publish to public log channel.",
             color=self.bot.Context.Color.GOOD,
         )
 
     @commands.command()
     async def ban(
-            self,
-            ctx: Fuzzy.Context,
-            who: commands.Greedy[discord.User],
-            *,
-            reason: Optional[str] = "",
+        self,
+        ctx: Fuzzy.Context,
+        who: commands.Greedy[discord.User],
+        *,
+        reason: Optional[str] = "",
     ):
         """Bans a user from the server.
         `who` is a space-separated list of users. This can be mentions, ids or names.

@@ -107,8 +107,7 @@ class Infractions(IInfractions):
         infraction = None
         try:
             infraction = self.conn.execute(
-                "SELECT * FROM infractions WHERE oid=:id",
-                {"id": infraction_id},
+                "SELECT * FROM infractions WHERE oid=:id", {"id": infraction_id},
             ).fetchone()
         except sqlite3.DatabaseError:
             pass
@@ -118,7 +117,7 @@ class Infractions(IInfractions):
                     infraction["oid"],
                     DBUser(infraction["user_id"], infraction["user_name"]),
                     DBUser(infraction["moderator_id"], infraction["moderator_name"]),
-                    self.db.guilds.find_by_id(infraction['guild_id']),
+                    self.db.guilds.find_by_id(infraction["guild_id"]),
                     infraction["reason"],
                     infraction["infraction_on"],
                     InfractionType(infraction["infraction_type"]),
@@ -209,8 +208,8 @@ class Infractions(IInfractions):
             infractions = self.conn.execute(
                 "SELECT * FROM infractions "
                 "WHERE user_id=:user_id AND guild_id=:guild_id "
-                "AND DATETIME(infraction_on) > expired_time=:expired_time"
-                "ORDER BY DATETIME(infraction_on) ASC",
+                "AND DATETIME(infraction_on) > :expired_time "
+                "ORDER BY datetime(infraction_on) ASC",
                 {
                     "user_id": user_id,
                     "guild_id": guild_id,
@@ -249,14 +248,14 @@ class Infractions(IInfractions):
             infractions = self.conn.execute(
                 "SELECT * FROM infractions "
                 "WHERE user_id=:user_id AND guild_id=:guild_id "
-                "AND DATETIME(infraction_on) > expired_time=:expired_time"
-                "AND infraction_type=:infraction_type"
+                "AND DATETIME(infraction_on) > :expired_time "
+                "AND infraction_type=:infraction_type "
                 "ORDER BY DATETIME(infraction_on) ASC",
                 {
                     "user_id": user_id,
                     "guild_id": guild_id,
                     "expired_time": expired_time,
-                    "infraction_type": InfractionType.WARN,
+                    "infraction_type": InfractionType.WARN.value,
                 },
             ).fetchall()
         except sqlite3.DatabaseError:
@@ -291,14 +290,14 @@ class Infractions(IInfractions):
             infractions = self.conn.execute(
                 "SELECT * FROM infractions "
                 "WHERE user_id=:user_id AND guild_id=:guild_id "
-                "AND DATETIME(infraction_on) > expired_time=:expired_time"
-                "AND infraction_type=:infraction_type"
+                "AND DATETIME(infraction_on) > :expired_time "
+                "AND infraction_type=:infraction_type "
                 "ORDER BY DATETIME(infraction_on) ASC",
                 {
                     "user_id": user_id,
                     "guild_id": guild_id,
                     "expired_time": expired_time,
-                    "infraction_type": InfractionType.MUTE,
+                    "infraction_type": InfractionType.MUTE.value,
                 },
             ).fetchall()
         except sqlite3.DatabaseError:
@@ -333,14 +332,14 @@ class Infractions(IInfractions):
             infractions = self.conn.execute(
                 "SELECT * FROM infractions "
                 "WHERE user_id=:user_id AND guild_id=:guild_id "
-                "AND DATETIME(infraction_on) > expired_time=:expired_time"
-                "AND infraction_type=:infraction_type"
+                "AND DATETIME(infraction_on) > :expired_time "
+                "AND infraction_type=:infraction_type "
                 "ORDER BY DATETIME(infraction_on) ASC",
                 {
                     "user_id": user_id,
                     "guild_id": guild_id,
                     "expired_time": expired_time,
-                    "infraction_type": InfractionType.BAN,
+                    "infraction_type": InfractionType.BAN.value,
                 },
             ).fetchall()
         except sqlite3.DatabaseError:
@@ -379,7 +378,7 @@ class Infractions(IInfractions):
                 {
                     "moderator_id": moderator_id,
                     "guild_id": guild_id,
-                    "infraction_type": InfractionType.WARN,
+                    "infraction_type": InfractionType.WARN.value,
                 },
             ).fetchall()
             mutes = self.conn.execute(
@@ -389,7 +388,7 @@ class Infractions(IInfractions):
                 {
                     "moderator_id": moderator_id,
                     "guild_id": guild_id,
-                    "infraction_type": InfractionType.MUTE,
+                    "infraction_type": InfractionType.MUTE.value,
                 },
             ).fetchall()
             bans = self.conn.execute(
@@ -399,7 +398,7 @@ class Infractions(IInfractions):
                 {
                     "moderator_id": moderator_id,
                     "guild_id": guild_id,
-                    "infraction_type": InfractionType.BAN,
+                    "infraction_type": InfractionType.BAN.value,
                 },
             ).fetchall()
         except sqlite3.DatabaseError:
@@ -571,7 +570,9 @@ class Guilds(IGuilds):
                     guild["id"],
                     guild["mod_log"],
                     guild["public_log"],
-                    DurationType(guild["duration_type"]) if guild["duration_type"] else None,
+                    DurationType(guild["duration_type"])
+                    if guild["duration_type"]
+                    else None,
                     guild["duration"],
                     guild["mute_role"],
                 )
@@ -680,7 +681,7 @@ class Locks(ILocks):
             return objectified_locks
 
     def save(self, lock: Lock) -> Lock:
-        retrieved_lock = self.find_by_id(lock.guild.id)
+        retrieved_lock = self.find_by_id(lock.channel_id)
         if retrieved_lock:
             try:
                 self.conn.execute(
@@ -688,13 +689,13 @@ class Locks(ILocks):
                     "moderator_id=:moderator_id,"
                     "moderator_name=:moderator_name,"
                     "reason=:reason,"
-                    "end_time=:end_time,"
+                    "end_time=:end_time "
                     "WHERE channel_id=channel_id",
                     {
                         "moderator_id": lock.moderator.id,
                         "moderator_name": lock.moderator.name,
                         "reason": lock.reason,
-                        "end_time": lock.guild,
+                        "end_time": lock.end_time,
                         "channel_id": lock.channel_id,
                     },
                 )
@@ -708,7 +709,7 @@ class Locks(ILocks):
                     lock.previous_value,
                     lock.moderator.id,
                     lock.moderator.name,
-                    lock.guild,
+                    lock.guild.id,
                     lock.reason,
                     lock.end_time,
                 )
@@ -721,7 +722,7 @@ class Locks(ILocks):
                 self.conn.commit()
             except sqlite3.DatabaseError:
                 pass
-        return self.find_by_id(lock.guild.id)
+        return self.find_by_id(lock.channel_id)
 
     def delete(self, channel_id: int) -> None:
         self.conn.execute("DELETE FROM locks WHERE channel_id=:id", {"id": channel_id})

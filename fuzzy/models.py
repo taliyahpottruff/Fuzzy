@@ -32,11 +32,11 @@ class GuildSettings(object):
     mute_role: int
 
     def infraction_expired_time(self) -> datetime:
-        if self.duration_type == DurationType.DAYS:
+        if self.duration_type.value == DurationType.DAYS.value:
             return datetime.utcnow() - timedelta(days=self.duration)
-        if self.duration_type == DurationType.MONTHS:
+        if self.duration_type.value == DurationType.MONTHS.value:
             return datetime.utcnow() - timedelta(days=(self.duration * 30))
-        if self.duration_type == DurationType.YEARS:
+        if self.duration_type.value == DurationType.YEARS.value:
             return datetime.utcnow() - timedelta(days=(self.duration * 365))
 
 

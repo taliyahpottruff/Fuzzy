@@ -194,7 +194,10 @@ class InfractionAdmin(Fuzzy.Cog):
             infraction: Infraction = ctx.db.infractions.find_by_id(
                 infraction_id, ctx.guild.id
             )
-            if infraction and infraction.infraction_type.value == InfractionType.BAN.value:
+            if (
+                infraction
+                and infraction.infraction_type.value == InfractionType.BAN.value
+            ):
                 all_bans.append(infraction)
             elif infraction.infraction_type != InfractionType.BAN:
                 all_non_bans.append(str(infraction.id))
