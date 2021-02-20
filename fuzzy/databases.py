@@ -665,7 +665,7 @@ class Locks(ILocks):
             )
 
     def find_expired_locks(self) -> List[Lock]:
-        locks = None
+        locks = []
         try:
             locks = self.conn.execute(
                 "SELECT * FROM locks WHERE DATETIME(end_time) < :time",

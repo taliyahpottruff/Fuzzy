@@ -18,8 +18,6 @@ class Locks(Fuzzy.Cog):
     async def execute_expired_locks(self):
         """Finds expired locks and unlocks them."""
         locks: List[Lock] = self.bot.db.locks.find_expired_locks()
-        if not locks:
-            return
         for lock in locks:
             guild: discord.Guild = self.bot.get_guild(lock.guild.id)
             # noinspection PyTypeChecker
