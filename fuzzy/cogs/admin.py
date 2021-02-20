@@ -28,7 +28,7 @@ class Admin(Fuzzy.Cog):
     @commands.command(parent=admin)
     @commands.has_guild_permissions(manage_guild=True)
     async def public_log(
-        self, ctx: Fuzzy.Context, channel: Optional[discord.TextChannel]
+            self, ctx: Fuzzy.Context, channel: Optional[discord.TextChannel]
     ):
         """Updates the public log channel.
         `channel` is the channel to post the logs in. If left empty, Fuzzy uses the current channel."""
@@ -98,18 +98,32 @@ class Admin(Fuzzy.Cog):
         guild.mute_role = role.id
         ctx.db.guilds.save(guild)
 
+        channel_errors = []
         for channel in ctx.guild.channels:
             if (
-                isinstance(channel, discord.TextChannel)
-                and not channel.permissions_synced
+                    isinstance(channel, discord.TextChannel)
+                    and not channel.permissions_synced
             ):
-                await channel.set_permissions(role, send_messages=False)
+                try:
+                    await channel.set_permissions(role, send_messages=False)
+                except discord.Forbidden:
+                    channel_errors.append(channel)
+        category_errors = []
         for category in ctx.guild.categories:
-            await category.set_permissions(role, send_messages=False)
+            try:
+                await category.set_permissions(role, send_messages=False)
+            except discord.Forbidden:
+                category_errors.append(category)
 
         await ctx.reply(
             f"{self.bot.user.display_name} will now use {role.mention} when muting someone."
         )
+        if category_errors or channel_errors:
+            await ctx.reply(f"Failed to update the following due to mission permissions." +
+                            ((f"\n**Categories:** " + ", ".join(category.name for category in category_errors))
+                             if category_errors else "") +
+                            ((f"\n**Channels:** " + " ".join(channel.mention for channel in channel_errors))
+                             if channel_errors else "")
         await self.bot.post_log(
             ctx.guild,
             msg=f"{ctx.author.name}#{ctx.author.discriminator} created mute {role.name}",
@@ -124,20 +138,34 @@ class Admin(Fuzzy.Cog):
         role = ctx.guild.get_role(guild.mute_role)
         guild.mute_role = role.id
         ctx.db.guilds.save(guild)
-
+        channel_errors = []
         for channel in ctx.guild.channels:
             if (
-                isinstance(channel, discord.TextChannel)
-                and not channel.permissions_synced
+                    isinstance(channel, discord.TextChannel)
+                    and not channel.permissions_synced
             ):
-                await channel.set_permissions(role, send_messages=False)
+                try:
+                    await channel.set_permissions(role, send_messages=False)
+                except discord.Forbidden:
+                    channel_errors.append(channel)
+        category_errors = []
         for category in ctx.guild.categories:
-            await category.set_permissions(role, send_messages=False)
-
-        await ctx.reply(
-            f"{role.mention} permissions have been refreshed on the server. If issues persist "
-            f" check if a role the user has gives them explict 'Send Messages' permissions"
-        )
+            try:
+                await category.set_permissions(role, send_messages=False)
+            except discord.Forbidden:
+                category_errors.append(category)
+        if not channel_errors and not category_errors:
+            await ctx.reply(
+                f"{role.mention} permissions have been refreshed on the server. If issues persist "
+                f" check if a role the user has gives them explict 'Send Messages' permissions"
+            )
+        else:
+            await ctx.reply(f"Failed to update the following due to mission permissions." +
+                            ((f"\n**Categories:** " + ", ".join(category.name for category in category_errors))
+                             if category_errors else "") +
+                            ((f"\n**Channels:** " + " ".join(channel.mention for channel in channel_errors))
+                             if channel_errors else "")
+                            )
         await self.bot.post_log(
             ctx.guild,
             msg=f"{ctx.author.name}#{ctx.author.discriminator} refreshed permissions on {role.name}",
