@@ -19,6 +19,8 @@ class Mutes(Fuzzy.Cog):
     async def execute_expired_mutes(self):
         """Finds expired mutes and unmutes the user"""
         mutes: List[Mute] = self.bot.db.mutes.find_expired_mutes()
+        if not mutes:
+            return
         for mute in mutes:
             guild: discord.Guild = await self.bot.fetch_guild(mute.infraction.guild.id)
             # noinspection PyTypeChecker
@@ -31,8 +33,9 @@ class Mutes(Fuzzy.Cog):
             if user and mute_role:
                 await user.remove_roles(mute_role)
                 try:
-                    await self.bot.direct_message(user,
-                                                  msg=f"Your mute on {guild.name} has expired.")
+                    await self.bot.direct_message(
+                        user, msg=f"Your mute on {guild.name} has expired."
+                    )
                 except discord.Forbidden or discord.HTTPException:
                     pass
             self.bot.db.mutes.delete(mute.infraction.id)
@@ -45,12 +48,12 @@ class Mutes(Fuzzy.Cog):
     @commands.command()
     @commands.has_guild_permissions(manage_messages=True)
     async def mute(
-            self,
-            ctx: Fuzzy.Context,
-            who: commands.Greedy[typing.Union[discord.Member, discord.User]],
-            time: ParseableTimedelta,
-            *,
-            reason: Optional[str] = "",
+        self,
+        ctx: Fuzzy.Context,
+        who: commands.Greedy[typing.Union[discord.Member, discord.User]],
+        time: ParseableTimedelta,
+        *,
+        reason: Optional[str] = "",
     ):
         """Mutes users for the specified amount of time.
 
@@ -100,11 +103,13 @@ class Mutes(Fuzzy.Cog):
                         f"{member.mention}: Mute **ID {infraction.id}**"
                     )
                     try:
-                        await self.bot.direct_message(member,
-                                                      title=f"Mute ID {infraction.id}",
-                                                      msg=f"You have been muted on {ctx.guild.name} " +
-                                                          (f'for \"{reason}\"' if reason else '') +
-                                                          f"for {time}")
+                        await self.bot.direct_message(
+                            member,
+                            title=f"Mute ID {infraction.id}",
+                            msg=f"You have been muted on {ctx.guild.name} "
+                            + (f'for "{reason}"' if reason else "")
+                            + f"for {time}",
+                        )
                     except discord.Forbidden or discord.HTTPException:
                         error_sending_dm.append(member)
             else:
@@ -113,24 +118,31 @@ class Mutes(Fuzzy.Cog):
         mute_string = "\n".join(muted_members)
         await ctx.reply(
             title="Mute",
-            msg=(f"**Reason:** {reason}\n" if reason else "") + f"**Length:** {time}\n{mute_string}",
+            msg=(f"**Reason:** {reason}\n" if reason else "")
+            + f"**Length:** {time}\n{mute_string}",
             color=ctx.Color.BAD,
         )
         if error_sending_dm:
-            await ctx.reply(f"Could not send direct message to the following users: "
-                            f"{' '.join(member.mention for member in error_sending_dm)}")
+            await ctx.reply(
+                f"Could not send direct message to the following users: "
+                f"{' '.join(member.mention for member in error_sending_dm)}"
+            )
         await self.bot.post_log(
             ctx.guild,
             title="Mute",
             msg=f"**Mod:** {ctx.author.name}#{ctx.author.discriminator}\n"
-                + (f"**Reason:** {reason}\n" if reason else "")
-                + f"**Length:** {time}\n{mute_string}",
+            + (f"**Reason:** {reason}\n" if reason else "")
+            + f"**Length:** {time}\n{mute_string}",
             color=ctx.Color.BAD,
         )
 
     @commands.command()
     @commands.has_guild_permissions(manage_messages=True)
-    async def unmute(self, ctx: Fuzzy.Context, who: commands.Greedy[typing.Union[discord.Member, discord.User]]):
+    async def unmute(
+        self,
+        ctx: Fuzzy.Context,
+        who: commands.Greedy[typing.Union[discord.Member, discord.User]],
+    ):
         """Unmutes a user.
         `who` is a space-separated list of discord users that are to be unmuted. This can be an ID< a user mention, or
         their name."""
@@ -153,8 +165,9 @@ class Mutes(Fuzzy.Cog):
                 if mute_role in member.roles:
                     await member.remove_roles(mute_role)
                     try:
-                        await self.bot.direct_message(member,
-                                                      msg=f"Your mute on {ctx.guild.name} was removed.")
+                        await self.bot.direct_message(
+                            member, msg=f"Your mute on {ctx.guild.name} was removed."
+                        )
                     except discord.Forbidden or discord.HTTPException:
                         pass
             unmuted_members.append(member.mention)
@@ -167,8 +180,7 @@ class Mutes(Fuzzy.Cog):
         await ctx.reply(msg)
         await self.bot.post_log(
             ctx.guild,
-            msg=f"{ctx.author.mention} "
-                f"unmuted {' '.join(unmuted_members)}",
+            msg=f"{ctx.author.mention} " f"unmuted {' '.join(unmuted_members)}",
             color=ctx.Color.AUTOMATIC_BLUE,
         )
 

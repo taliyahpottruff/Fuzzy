@@ -155,7 +155,9 @@ class InfractionAdmin(Fuzzy.Cog):
             infraction.reason = reason
             if infraction.moderator.id == 0:
                 infraction.moderator.id = ctx.author.id
-                infraction.moderator.name = f"{ctx.author.name}#{ctx.author.discriminator}"
+                infraction.moderator.name = (
+                    f"{ctx.author.name}#{ctx.author.discriminator}"
+                )
             ctx.db.infractions.save(infraction)
             if (
                 infraction.infraction_type.value == InfractionType.BAN.value

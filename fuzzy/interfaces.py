@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import List, Dict
 
-from models import *
+from fuzzy.models import *
 
 
 class IInfractions(ABC):

@@ -11,7 +11,7 @@ import discord
 from discord import Activity, ActivityType
 from discord.ext import commands
 
-from databases import Database
+from fuzzy.databases import Database
 
 
 class Fuzzy(commands.Bot):
@@ -163,13 +163,13 @@ class Fuzzy(commands.Bot):
 
     @staticmethod
     async def direct_message(
-            to: typing.Union[discord.Member, discord.User],
-            msg: str = None,
-            title: str = discord.Embed.Empty,
-            subtitle: str = None,
-            color: Context.Color = Context.Color.GOOD,
-            embed: discord.Embed = None,
-            delete_after: float = None,
+        to: typing.Union[discord.Member, discord.User],
+        msg: str = None,
+        title: str = discord.Embed.Empty,
+        subtitle: str = None,
+        color: Context.Color = Context.Color.GOOD,
+        embed: discord.Embed = None,
+        delete_after: float = None,
     ):
         """Helper for direct messaging a user."""
         if to.bot:

@@ -10,15 +10,14 @@ from typing import Optional
 import discord
 from discord.ext import commands
 
-from customizations import Fuzzy
-from databases import Database
-from databases import Database
-from errors import AnticipatedError, Unauthorized, PleaseRestate
+from fuzzy.customizations import Fuzzy
+from fuzzy.databases import Database
+from fuzzy.errors import AnticipatedError, Unauthorized, PleaseRestate
 from fuzzy import cogs
-from models import GuildSettings, DurationType
+from fuzzy.models import GuildSettings, DurationType
 
 config = ConfigParser()
-config.read("../fuzzy.cfg")
+config.read("./fuzzy.cfg")
 
 logging.basicConfig(
     format="%(levelname)s %(name)s: %(message)s", level=config["log"]["level"]
@@ -59,7 +58,7 @@ def process_docstrings(text) -> str:
     return re.sub(
         r"(.+)\n *",
         r"\1 ",
-        Template(text).safe_substitute({"pfx": bot.config["discord"]["prefix"], }),
+        Template(text).safe_substitute({"pfx": bot.config["discord"]["prefix"],}),
     )
 
 
@@ -87,7 +86,7 @@ async def on_ready():
             if not guild_settings:
                 # noinspection PyTypeChecker
                 bot.db.guilds.save(
-                    GuildSettings(guild.id, None, None, DurationType.YEARS, 30, None, )
+                    GuildSettings(guild.id, None, None, DurationType.YEARS, 30, None,)
                 )
 
 
@@ -107,7 +106,7 @@ async def on_guild_join(guild: discord.Guild):
     if not guild_settings:
         # noinspection PyTypeChecker
         bot.db.guilds.save(
-            GuildSettings(guild.id, None, None, DurationType.YEARS, 30, None, )
+            GuildSettings(guild.id, None, None, DurationType.YEARS, 30, None,)
         )
 
 
@@ -164,8 +163,8 @@ async def _help(ctx: Fuzzy.Context, *, subject: Optional[str]):
     else:
         for command in ctx.bot.walk_commands():
             if subject.casefold() in (
-                    command.qualified_name.casefold(),
-                    command.qualified_name.replace(ctx.bot.command_prefix, "").casefold(),
+                command.qualified_name.casefold(),
+                command.qualified_name.replace(ctx.bot.command_prefix, "").casefold(),
             ):
                 embed.title = signature(command)
                 embed.description = command.help
@@ -198,7 +197,7 @@ async def on_command_error(ctx: Fuzzy.Context, error):
     discordpy) to stderr and discordpy (i.e. high-level) errors to the user.
     """
     if isinstance(error, commands.CommandInvokeError) and isinstance(
-            error.original, AnticipatedError
+        error.original, AnticipatedError
     ):
         original = error.original
         await ctx.reply(

@@ -4,7 +4,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import List, Dict
 
-from interfaces import (
+from fuzzy.interfaces import (
     IInfractions,
     IGuilds,
     IPardons,
@@ -12,7 +12,7 @@ from interfaces import (
     ILocks,
     IPublishedMessages,
 )
-from models import (
+from fuzzy.models import (
     Infraction,
     InfractionType,
     PublishType,
@@ -139,10 +139,12 @@ class Infractions(IInfractions):
                 "UPDATE infractions SET reason=:reason, "
                 "moderator_id=:moderator_id, "
                 "moderator_name=:moderator_name WHERE oid=:id",
-                {"reason": infraction.reason,
-                 "moderator_id": infraction.moderator.id,
-                 "moderator_name": infraction.moderator.name,
-                 "id": infraction.id},
+                {
+                    "reason": infraction.reason,
+                    "moderator_id": infraction.moderator.id,
+                    "moderator_name": infraction.moderator.name,
+                    "id": infraction.id,
+                },
             )
             self.conn.commit()
         else:

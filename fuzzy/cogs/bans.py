@@ -45,7 +45,7 @@ class Bans(Fuzzy.Cog):
             f"`{self.bot.command_prefix}publish ban {infraction.id}`"
             if infraction.reason
             else f"Reason can be updated with "
-                 f"`{self.bot.command_prefix}reason {infraction.id} <your reason here>`"
+            f"`{self.bot.command_prefix}reason {infraction.id} <your reason here>`"
         )
         await self.bot.post_log(
             guild,
@@ -63,19 +63,19 @@ class Bans(Fuzzy.Cog):
             guild,
             title=f"Unban  #{infraction.id}",
             msg=f"{user.name} (ID {user.id})\n"
-                f"`{self.bot.command_prefix}pardon {infraction.id} <reason>` to add an unban reason."
-                f"Then `{self.bot.command_prefix}publish unban {infraction.id}` to publish to public log channel.",
+            f"`{self.bot.command_prefix}pardon {infraction.id} <reason>` to add an unban reason."
+            f"Then `{self.bot.command_prefix}publish unban {infraction.id}` to publish to public log channel.",
             color=self.bot.Context.Color.GOOD,
         )
 
     @commands.command()
     @commands.has_guild_permissions(manage_messages=True)
     async def ban(
-            self,
-            ctx: Fuzzy.Context,
-            who: commands.Greedy[typing.Union[discord.Member, discord.User]],
-            *,
-            reason: Optional[str] = "",
+        self,
+        ctx: Fuzzy.Context,
+        who: commands.Greedy[typing.Union[discord.Member, discord.User]],
+        *,
+        reason: Optional[str] = "",
     ):
         """Bans a user from the server.
         `who` is a space-separated list of users. This can be mentions, ids or names.
@@ -85,15 +85,21 @@ class Bans(Fuzzy.Cog):
         for user in who:  # type: discord.User
             if await self.check_if_can_ban(user):
                 if user.id != ctx.author.id:
-                    infraction = Infraction.create(ctx, user, reason, InfractionType.BAN)
+                    infraction = Infraction.create(
+                        ctx, user, reason, InfractionType.BAN
+                    )
                     infraction = ctx.db.infractions.save(infraction)
                     if infraction:
-                        banned_users.append(f"{infraction.user.name}: Ban ID {infraction.id}")
+                        banned_users.append(
+                            f"{infraction.user.name}: Ban ID {infraction.id}"
+                        )
                         try:
-                            await self.bot.direct_message(user,
-                                                          title=f"Ban ID {infraction.id}",
-                                                          msg=f"You have been banned from {ctx.guild.name} " +
-                                                              (f'for \"{reason}\"' if reason else ''))
+                            await self.bot.direct_message(
+                                user,
+                                title=f"Ban ID {infraction.id}",
+                                msg=f"You have been banned from {ctx.guild.name} "
+                                + (f'for "{reason}"' if reason else ""),
+                            )
                         except discord.Forbidden or discord.HTTPException:
                             pass
                     try:
@@ -114,8 +120,10 @@ class Bans(Fuzzy.Cog):
                 color=ctx.Color.BAD,
             )
         if insufficient_permissions:
-            await ctx.reply(f"Insufficient permissions to ban the following users: "
-                            f"{' '.join(user.mention for user in insufficient_permissions)}")
+            await ctx.reply(
+                f"Insufficient permissions to ban the following users: "
+                f"{' '.join(user.mention for user in insufficient_permissions)}"
+            )
 
     @commands.command()
     @commands.has_guild_permissions(manage_messages=True)
@@ -130,9 +138,11 @@ class Bans(Fuzzy.Cog):
             if infraction:
                 unbanned_users.append(f"{infraction.user.name}: Ban ID {infraction.id}")
                 try:
-                    await self.bot.direct_message(user,
-                                                  title=f"Unban ID {infraction.id}",
-                                                  msg=f"You have been unbanned from {ctx.guild.name}")
+                    await self.bot.direct_message(
+                        user,
+                        title=f"Unban ID {infraction.id}",
+                        msg=f"You have been unbanned from {ctx.guild.name}",
+                    )
                 except discord.Forbidden or discord.HTTPException:
                     pass
 
@@ -141,10 +151,17 @@ class Bans(Fuzzy.Cog):
             title="Unbanned", msg=f"{unban_string}", color=ctx.Color.GOOD,
         )
 
-    async def check_if_can_ban(self, member: typing.Union[discord.Member, discord.User]):
+    async def check_if_can_ban(
+        self, member: typing.Union[discord.Member, discord.User]
+    ):
         if isinstance(member, discord.User):
             return True
         guild: discord.Guild = member.guild
-        bot_member_account: discord.Member = await member.guild.fetch_member(self.bot.user.id)
-        return (guild.roles.index(bot_member_account.roles[-1]) > guild.roles.index(member.roles[-1])
-                and guild.owner_id != member.id)
+        bot_member_account: discord.Member = await member.guild.fetch_member(
+            self.bot.user.id
+        )
+        return (
+            guild.roles.index(bot_member_account.roles[-1])
+            > guild.roles.index(member.roles[-1])
+            and guild.owner_id != member.id
+        )
