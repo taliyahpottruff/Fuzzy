@@ -16,6 +16,10 @@ class Logs(Fuzzy.Cog):
     async def all(self, ctx: Fuzzy.Context, who: discord.User):
         """Displays all Infractions of the specified user.
         `who` is the person to grab the infractions for. This can be a mention, ID or name."""
+        if not ctx.author.guild_permissions.manage_messages and ctx.author != who:
+            await ctx.reply("Insufficient permissions to access someone else's log.")
+            return
+
         all_infraction: List[Infraction] = ctx.db.infractions.find_all_for_user(
             who.id, ctx.guild.id
         )
@@ -36,6 +40,10 @@ class Logs(Fuzzy.Cog):
     async def warns(self, ctx: Fuzzy.Context, who: discord.User):
         """Displays all warns of the specified user.
         `who` is the person to grab the warns for. This can be a mention, ID or name."""
+        if not ctx.author.guild_permissions.manage_messages and ctx.author != who:
+            await ctx.reply("Insufficient permissions to access someone else's log.")
+            return
+
         all_infraction: List[Infraction] = ctx.db.infractions.find_warns_for_user(
             who.id, ctx.guild.id
         )
@@ -56,6 +64,10 @@ class Logs(Fuzzy.Cog):
     async def mutes(self, ctx: Fuzzy.Context, who: discord.User):
         """Displays all mutes of the specified user.
          who` is the person to grab the mutes for. This can be a mention, ID or name."""
+        if not ctx.author.guild_permissions.manage_messages and ctx.author != who:
+            await ctx.reply("Insufficient permissions to access someone else's log.")
+            return
+
         all_infraction: List[Infraction] = ctx.db.infractions.find_mutes_for_user(
             who.id, ctx.guild.id
         )
@@ -76,6 +88,10 @@ class Logs(Fuzzy.Cog):
     async def bans(self, ctx: Fuzzy.Context, who: discord.User):
         """Displays all bans of the specified user.
           `who` is the person to grab the bans for. This can be a mention, ID or name."""
+        if not ctx.author.guild_permissions.manage_messages and ctx.author != who:
+            await ctx.reply("Insufficient permissions to access someone else's log.")
+            return
+
         all_infraction: List[Infraction] = ctx.db.infractions.find_bans_for_user(
             who.id, ctx.guild.id
         )
@@ -96,6 +112,10 @@ class Logs(Fuzzy.Cog):
     async def mod(self, ctx: Fuzzy.Context, who: discord.User):
         """Displays all the actions of the specified moderator..
         who` is the person to grab the actions for. This can be a mention, ID or name."""
+        if not ctx.author.guild_permissions.manage_messages and ctx.author != who:
+            await ctx.reply("Insufficient permissions to access someone else's log.")
+            return
+
         mod_actions = ctx.db.infractions.find_mod_actions(who.id, ctx.guild.id)
         await ctx.reply(
             title=f"Moderation log for {who.name}#{who.discriminator}",

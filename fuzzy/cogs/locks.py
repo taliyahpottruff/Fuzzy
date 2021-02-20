@@ -39,6 +39,7 @@ class Locks(Fuzzy.Cog):
             self.bot.db.locks.delete(lock.channel_id)
 
     @commands.command()
+    @commands.has_permissions(manage_messages=True)
     async def lock(
         self,
         ctx: Fuzzy.Context,
@@ -89,6 +90,7 @@ class Locks(Fuzzy.Cog):
         )
 
     @commands.command()
+    @commands.has_permissions(manage_messages=True)
     async def unlock(
         self, ctx: Fuzzy.Context, channel: Optional[discord.TextChannel],
     ):

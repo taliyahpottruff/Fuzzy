@@ -9,10 +9,12 @@ from fuzzy.models import DurationType
 
 class Admin(Fuzzy.Cog):
     @commands.group()
+    @commands.has_guild_permissions(manage_guild=True)
     async def admin(self, ctx: Fuzzy.Context):
         """Administration Module for bot. Updates the various settings for this server."""
 
     @commands.command(parent=admin)
+    @commands.has_guild_permissions(manage_guild=True)
     async def log(self, ctx: Fuzzy.Context, channel: Optional[discord.TextChannel]):
         """Updates the mod log channel.
         `channel` is the channel to post the logs in. If left empty, Fuzzy uses the current channel."""
@@ -24,6 +26,7 @@ class Admin(Fuzzy.Cog):
         await ctx.reply(f"Updated the mod log channel to {channel.mention}")
 
     @commands.command(parent=admin)
+    @commands.has_guild_permissions(manage_guild=True)
     async def public_log(
         self, ctx: Fuzzy.Context, channel: Optional[discord.TextChannel]
     ):
@@ -41,6 +44,7 @@ class Admin(Fuzzy.Cog):
         )
 
     @commands.command(parent=admin)
+    @commands.has_guild_permissions(manage_guild=True)
     async def auto_pardon(self, ctx: Fuzzy.Context, time: str):
         """Updates how long till Infractions are auto pardoned.
         `time` is an amount followed by a letter to indicate type. I.E 6m would be 6 months.
@@ -63,10 +67,12 @@ class Admin(Fuzzy.Cog):
         )
 
     @commands.group(parent=admin)
+    @commands.has_guild_permissions(manage_guild=True)
     async def mutes(self, ctx: Fuzzy.Context):
         """Updates and manages the Mute role used by the mute module."""
 
     @commands.command(parent=mutes)
+    @commands.has_guild_permissions(manage_guild=True)
     async def set(self, ctx: Fuzzy.Context, role: discord.Role):
         """This will assign an already existing role as the role to use for muting a member.
         This is useful if you have used a different moderation bot previously and would like to reuse that role.
@@ -83,6 +89,7 @@ class Admin(Fuzzy.Cog):
         )
 
     @commands.command(parent=mutes)
+    @commands.has_guild_permissions(manage_guild=True)
     async def create(self, ctx: Fuzzy.Context):
         """This creates a new role for muting. It will go through every channel and category on the server and
         add this role as an override that blocks 'Send Messages' permissions"""
@@ -109,6 +116,7 @@ class Admin(Fuzzy.Cog):
         )
 
     @commands.command(parent=mutes)
+    @commands.has_guild_permissions(manage_guild=True)
     async def refresh(self, ctx: Fuzzy.Context):
         """This refreshes the permissions of the mute role. It will go through every channel and
         category on the server and add this role as an override that blocks 'Send Messages' permissions"""

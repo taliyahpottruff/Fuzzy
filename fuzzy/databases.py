@@ -136,8 +136,13 @@ class Infractions(IInfractions):
     def save(self, infraction: Infraction) -> Infraction:
         if infraction.id:
             self.conn.execute(
-                "UPDATE infractions SET reason=:reason WHERE oid=:id",
-                {"reason": infraction.reason, "id": infraction.id},
+                "UPDATE infractions SET reason=:reason, "
+                "moderator_id=:moderator_id, "
+                "moderator_name=:moderator_name WHERE oid=:id",
+                {"reason": infraction.reason,
+                 "moderator_id": infraction.moderator.id,
+                 "moderator_name": infraction.moderator.name,
+                 "id": infraction.id},
             )
             self.conn.commit()
         else:
@@ -602,7 +607,7 @@ class Guilds(IGuilds):
                     },
                 )
                 self.conn.commit()
-            except sqlite3.DatabaseError as error:
+            except sqlite3.DatabaseError:
                 pass
         else:
             try:
@@ -756,6 +761,7 @@ class PublishedMessages(IPublishedMessages):
         )
 
     def save(self, published_ban: PublishedMessage) -> PublishedMessage:
+        self.delete_with_type(published_ban.infraction_id, published_ban.publish_type)
         try:
             values = (
                 published_ban.infraction_id,

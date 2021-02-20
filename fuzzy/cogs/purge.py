@@ -1,5 +1,3 @@
-from datetime import datetime, timedelta
-
 from discord.ext import commands
 
 from fuzzy import Fuzzy
@@ -7,6 +5,7 @@ from fuzzy import Fuzzy
 
 class Purges(Fuzzy.Cog):
     @commands.command()
+    @commands.has_permissions(manage_messages=True)
     async def purge(self, ctx: Fuzzy.Context, amount: int):
         """Deletes the most recent messages in a channel.
         `amount` is the number of messages to delete."""

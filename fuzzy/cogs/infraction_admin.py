@@ -2,13 +2,14 @@ from typing import Optional
 
 from discord.ext import commands
 
-from fuzzy.errors import UnableToComply
 from fuzzy.customizations import Fuzzy
+from fuzzy.errors import UnableToComply
 from fuzzy.models import *
 
 
 class InfractionAdmin(Fuzzy.Cog):
     @commands.command()
+    @commands.has_guild_permissions(manage_messages=True)
     async def pardon(
         self,
         ctx: Fuzzy.Context,
@@ -88,6 +89,7 @@ class InfractionAdmin(Fuzzy.Cog):
             )
 
     @commands.command()
+    @commands.has_guild_permissions(manage_messages=True)
     async def forget(self, ctx: Fuzzy.Context, infraction_ids: commands.Greedy[int]):
         """Forgets a user's infraction. This will permanently remove the infraction from the logs.
 
@@ -126,6 +128,7 @@ class InfractionAdmin(Fuzzy.Cog):
             )
 
     @commands.command()
+    @commands.has_guild_permissions(manage_messages=True)
     async def reason(
         self, ctx: Fuzzy.Context, infraction_ids: commands.Greedy[int], *, reason: str
     ):
@@ -150,6 +153,9 @@ class InfractionAdmin(Fuzzy.Cog):
 
         for infraction in all_infractions:
             infraction.reason = reason
+            if infraction.moderator.id == 0:
+                infraction.moderator.id = ctx.author.id
+                infraction.moderator.name = f"{ctx.author.name}#{ctx.author.discriminator}"
             ctx.db.infractions.save(infraction)
             if (
                 infraction.infraction_type.value == InfractionType.BAN.value
@@ -158,6 +164,7 @@ class InfractionAdmin(Fuzzy.Cog):
                 channel: discord.TextChannel = ctx.guild.get_channel(
                     ctx.db.guilds.find_by_id(ctx.guild.id).public_log
                 )
+                # noinspection PyUnresolvedReferences
                 message: discord.Message = await channel.fetch_message(
                     infraction.published_ban.message_id
                 )
@@ -166,6 +173,7 @@ class InfractionAdmin(Fuzzy.Cog):
                         embed=InfractionAdmin.create_ban_embed(infraction)
                     )
                 else:
+                    # noinspection PyUnresolvedReferences
                     ctx.db.published_messages.delete_with_type(
                         infraction.id, infraction.published_ban.publish_type
                     )
@@ -185,10 +193,12 @@ class InfractionAdmin(Fuzzy.Cog):
             )
 
     @commands.group()
+    @commands.has_guild_permissions(manage_messages=True)
     async def publish(self, cts: Fuzzy.Context):
         """Publishes a ban or unban to the public ban log channel."""
 
     @commands.command(parent=publish)
+    @commands.has_guild_permissions(manage_messages=True)
     async def ban(self, ctx: Fuzzy.Context, infraction_ids: commands.Greedy[int]):
         """Publishes a ban to the public ban log channel.
         If ban has already been posted you can use ${pfx}reason to update it.
@@ -271,6 +281,7 @@ class InfractionAdmin(Fuzzy.Cog):
             await ctx.reply(msg, color=ctx.Color.AUTOMATIC_BLUE)
 
     @commands.command(parent=publish)
+    @commands.has_guild_permissions(manage_messages=True)
     async def unban(self, ctx: Fuzzy.Context, infraction_ids: commands.Greedy[int]):
         """Publishes an unban to the public ban log channel.
         If unban has already been posted you can use ${pfx}pardon to update it.

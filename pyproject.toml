@@ -8,6 +8,8 @@ license = "AGPL-3.0"
 [tool.poetry.dependencies]
 python = "^3.9"
 "discord.py" = "^1.6.0"
+astroid = "^2.5"
+lazy-object-proxy = "^1.5.2"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.2"

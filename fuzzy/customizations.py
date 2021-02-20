@@ -2,6 +2,7 @@ import enum
 import logging
 import random
 import re
+import typing
 from copy import copy
 from datetime import timedelta, datetime, timezone
 from typing import Union
@@ -46,7 +47,7 @@ class Fuzzy(commands.Bot):
             return self.bot.db
 
         async def invoke_command(self, text: str):
-            "Pretend the user is invoking a command."
+            """Pretend the user is invoking a command."""
             words = text.split(" ")
             if not words:
                 return
@@ -159,6 +160,49 @@ class Fuzzy(commands.Bot):
                 Activity(type=ActivityType.listening, name="to those with power.",),
             ]
         )
+
+    @staticmethod
+    async def direct_message(
+            to: typing.Union[discord.Member, discord.User],
+            msg: str = None,
+            title: str = discord.Embed.Empty,
+            subtitle: str = None,
+            color: Context.Color = Context.Color.GOOD,
+            embed: discord.Embed = None,
+            delete_after: float = None,
+    ):
+        """Helper for direct messaging a user."""
+        if to.bot:
+            return None
+        if not embed:
+            if not subtitle:
+                subtitle = discord.Embed.Empty
+
+            lines = str(msg).split("\n")
+            buf = ""
+            for line in lines:
+                if len(buf + "\n" + line) > 2048:
+                    await to.send(
+                        "",
+                        embed=discord.Embed(
+                            color=color, description=buf, title=title
+                        ).set_footer(text=subtitle),
+                        delete_after=delete_after,
+                    )
+                    buf = ""
+                else:
+                    buf += line + "\n"
+
+            if len(buf) > 0:
+                return await to.send(
+                    "",
+                    embed=discord.Embed(
+                        color=color, description=buf, title=title
+                    ).set_footer(text=subtitle),
+                    delete_after=delete_after,
+                )
+
+        return await to.send("", embed=embed, delete_after=delete_after)
 
     async def post_log(self, guild: discord.Guild, *args, **kwargs):
         """Post a log entry to a guild, usage same as ctx.reply"""
