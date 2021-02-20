@@ -7,7 +7,7 @@ import discord
 from discord.ext import commands
 
 from fuzzy import Fuzzy
-from fuzzy.models import Infraction, InfractionType, DBUser
+from fuzzy.models import DBUser, Infraction, InfractionType
 
 
 class Bans(Fuzzy.Cog):
@@ -148,7 +148,9 @@ class Bans(Fuzzy.Cog):
 
         unban_string = "\n".join(unbanned_users)
         await ctx.reply(
-            title="Unbanned", msg=f"{unban_string}", color=ctx.Color.GOOD,
+            title="Unbanned",
+            msg=f"{unban_string}",
+            color=ctx.Color.GOOD,
         )
 
     async def check_if_can_ban(

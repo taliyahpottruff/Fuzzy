@@ -2,11 +2,11 @@ from datetime import datetime
 from typing import List, Optional
 
 import discord
-from discord.ext import tasks, commands
+from discord.ext import commands, tasks
 
 from fuzzy import Fuzzy
 from fuzzy.customizations import ParseableTimedelta
-from fuzzy.models import Lock, DBUser
+from fuzzy.models import DBUser, Lock
 
 
 class Locks(Fuzzy.Cog):
@@ -94,7 +94,9 @@ class Locks(Fuzzy.Cog):
     @commands.command()
     @commands.has_permissions(manage_messages=True)
     async def unlock(
-        self, ctx: Fuzzy.Context, channel: Optional[discord.TextChannel],
+        self,
+        ctx: Fuzzy.Context,
+        channel: Optional[discord.TextChannel],
     ):
         """Prevents users from being able to speak in a channel.
         channel` is the channel to lock. If left empty the current channel will be used."""

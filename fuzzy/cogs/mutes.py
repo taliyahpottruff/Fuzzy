@@ -1,12 +1,13 @@
 import typing
-from datetime import timedelta, datetime
+from datetime import datetime, timedelta
 from typing import List, Optional
 
 import discord
-from discord.ext import tasks, commands
+from discord.ext import commands, tasks
 
 from fuzzy import Fuzzy
-from fuzzy.models import Mute, Infraction, InfractionType, DBUser
+from fuzzy.models import DBUser, Infraction, InfractionType, Mute
+
 from ..customizations import ParseableTimedelta
 
 

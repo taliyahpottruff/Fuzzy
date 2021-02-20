@@ -2,27 +2,27 @@ import logging
 import sqlite3
 from datetime import datetime
 from pathlib import Path
-from typing import List, Dict
+from typing import Dict, List
 
 from fuzzy.interfaces import (
-    IInfractions,
     IGuilds,
-    IPardons,
-    IMutes,
+    IInfractions,
     ILocks,
+    IMutes,
+    IPardons,
     IPublishedMessages,
 )
 from fuzzy.models import (
+    DBUser,
+    DurationType,
+    GuildSettings,
     Infraction,
     InfractionType,
-    PublishType,
-    PublishedMessage,
-    DBUser,
-    GuildSettings,
-    Pardon,
-    Mute,
     Lock,
-    DurationType,
+    Mute,
+    Pardon,
+    PublishedMessage,
+    PublishType,
 )
 
 
@@ -107,7 +107,8 @@ class Infractions(IInfractions):
         infraction = None
         try:
             infraction = self.conn.execute(
-                "SELECT * FROM infractions WHERE oid=:id", {"id": infraction_id},
+                "SELECT * FROM infractions WHERE oid=:id",
+                {"id": infraction_id},
             ).fetchone()
         except sqlite3.DatabaseError:
             pass

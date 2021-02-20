@@ -10,11 +10,11 @@ from typing import Optional
 import discord
 from discord.ext import commands
 
+from fuzzy import cogs
 from fuzzy.customizations import Fuzzy
 from fuzzy.databases import Database
-from fuzzy.errors import AnticipatedError, Unauthorized, PleaseRestate
-from fuzzy import cogs
-from fuzzy.models import GuildSettings, DurationType
+from fuzzy.errors import AnticipatedError, PleaseRestate, Unauthorized
+from fuzzy.models import DurationType, GuildSettings
 
 config = ConfigParser()
 config.read("./fuzzy.cfg")
@@ -58,7 +58,11 @@ def process_docstrings(text) -> str:
     return re.sub(
         r"(.+)\n *",
         r"\1 ",
-        Template(text).safe_substitute({"pfx": bot.config["discord"]["prefix"],}),
+        Template(text).safe_substitute(
+            {
+                "pfx": bot.config["discord"]["prefix"],
+            }
+        ),
     )
 
 
@@ -86,7 +90,14 @@ async def on_ready():
             if not guild_settings:
                 # noinspection PyTypeChecker
                 bot.db.guilds.save(
-                    GuildSettings(guild.id, None, None, DurationType.YEARS, 30, None,)
+                    GuildSettings(
+                        guild.id,
+                        None,
+                        None,
+                        DurationType.YEARS,
+                        30,
+                        None,
+                    )
                 )
 
 
@@ -106,7 +117,14 @@ async def on_guild_join(guild: discord.Guild):
     if not guild_settings:
         # noinspection PyTypeChecker
         bot.db.guilds.save(
-            GuildSettings(guild.id, None, None, DurationType.YEARS, 30, None,)
+            GuildSettings(
+                guild.id,
+                None,
+                None,
+                DurationType.YEARS,
+                30,
+                None,
+            )
         )
 
 
@@ -209,7 +227,9 @@ async def on_command_error(ctx: Fuzzy.Context, error):
         return
     elif isinstance(error, commands.UserInputError):
         await ctx.reply(
-            str(error), title=PleaseRestate.TEXT, color=ctx.Color.BAD,
+            str(error),
+            title=PleaseRestate.TEXT,
+            color=ctx.Color.BAD,
         )
         return
     elif isinstance(error, commands.CommandNotFound):
@@ -222,7 +242,8 @@ async def on_command_error(ctx: Fuzzy.Context, error):
             (error_int.bit_length() + 7) // 8, byteorder="little"
         )
         error_id = str(
-            base64.urlsafe_b64encode(error_bytes), encoding="utf-8",
+            base64.urlsafe_b64encode(error_bytes),
+            encoding="utf-8",
         ).replace("=", "")
 
         ctx.log.error(

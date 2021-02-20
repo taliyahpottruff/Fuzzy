@@ -63,7 +63,7 @@ class Logs(Fuzzy.Cog):
     @commands.command(parent=logs, aliases=["mute"])
     async def mutes(self, ctx: Fuzzy.Context, who: discord.User):
         """Displays all mutes of the specified user.
-         who` is the person to grab the mutes for. This can be a mention, ID or name."""
+        who` is the person to grab the mutes for. This can be a mention, ID or name."""
         if not ctx.author.guild_permissions.manage_messages and ctx.author != who:
             await ctx.reply("Insufficient permissions to access someone else's log.")
             return
@@ -87,7 +87,7 @@ class Logs(Fuzzy.Cog):
     @commands.command(parent=logs, aliases=["ban"])
     async def bans(self, ctx: Fuzzy.Context, who: discord.User):
         """Displays all bans of the specified user.
-          `who` is the person to grab the bans for. This can be a mention, ID or name."""
+        `who` is the person to grab the bans for. This can be a mention, ID or name."""
         if not ctx.author.guild_permissions.manage_messages and ctx.author != who:
             await ctx.reply("Insufficient permissions to access someone else's log.")
             return

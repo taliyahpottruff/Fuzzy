@@ -4,7 +4,7 @@ import random
 import re
 import typing
 from copy import copy
-from datetime import timedelta, datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Union
 
 import discord
@@ -157,7 +157,10 @@ class Fuzzy(commands.Bot):
         return random.choice(
             [
                 Activity(type=ActivityType.watching, name="and eating donuts."),
-                Activity(type=ActivityType.listening, name="to those with power.",),
+                Activity(
+                    type=ActivityType.listening,
+                    name="to those with power.",
+                ),
             ]
         )
 

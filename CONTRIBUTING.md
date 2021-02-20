@@ -46,12 +46,12 @@ automatically create the needed database.
 you to develop your feature concurrently to others working on other things.
 2. Make whatever changes you think appropriate. If you need help with something while making the
 changes, don't hesitate to ask in the support server or the issue you're working on! When you save
-your changes, use `Ctrl-C` in your development shell to stop the bot and repeat `python -m blimp` to
+your changes, use `Ctrl-C` in your development shell to stop the bot and repeat `python -m fuzzy` to
 restart it with your changes applied.
-3. Once your changes are complete, run `isort blimp` and `black blimp` in your development shell to
-format the codebase, followed by `pylint blimp` to see potential issues with your code. Once happy
+3. Once your changes are complete, run `isort fuzzy` and `black fuzzy` in your development shell to
+format the codebase, followed by `pylint fuzzy` to see potential issues with your code. Once happy
 with the results, stage your changes with git: `git add src/file1 src/file2 src/file_n` and commit
-them: `git commit`. Please don't alter the version number of BLIMP, we'll change it after the merge
+them: `git commit`. Please don't alter the version number of Fuzzy, we'll change it after the merge
 is done.
 4. Push your work to your fork: `git push origin the-previously-picked-branch-name`. Then, go to the
 [pull requests] page and click the button that should appear to create a pull request based on your
@@ -66,8 +66,6 @@ repository: `git pull upstream main`.
 [discordpy]: https://github.com/Rapptz/discord.py/
 [Python 3.9]: https://www.python.org/downloads/
 [git]: https://git-scm.com/
-[Nix]: https://nixos.org
 [poetry]: https://python-poetry.org
 [Applications page]: https://discord.com/developers/applications
-[pull requests]: https://github.com/The-Valley-Discord/blimp/pulls
-[TOML]: https://toml.io/
+[pull requests]: https://github.com/The-Valley-Discord/Fuzzy/pulls
