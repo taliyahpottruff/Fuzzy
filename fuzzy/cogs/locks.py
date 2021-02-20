@@ -39,7 +39,6 @@ class Locks(Fuzzy.Cog):
             self.bot.db.locks.delete(lock.channel_id)
 
     @commands.command()
-    @commands.has_permissions(manage_messages=True)
     async def lock(
         self,
         ctx: Fuzzy.Context,
@@ -59,6 +58,9 @@ class Locks(Fuzzy.Cog):
         everyone_role: discord.Role = ctx.guild.get_role(ctx.guild.id)
         if not channel:
             channel = ctx.channel
+        if not channel.permissions_for(ctx.author).manage_messages:
+            await ctx.reply("Insufficient permissions to lock channel.")
+            return
         if channel in ctx.guild.channels:
             lock = ctx.db.locks.save(
                 Lock(
@@ -90,7 +92,6 @@ class Locks(Fuzzy.Cog):
         )
 
     @commands.command()
-    @commands.has_permissions(manage_messages=True)
     async def unlock(
         self,
         ctx: Fuzzy.Context,
@@ -102,7 +103,9 @@ class Locks(Fuzzy.Cog):
         everyone_role: discord.Role = ctx.guild.get_role(ctx.guild.id)
         if not channel:
             channel = ctx.channel
-
+        if not channel.permissions_for(ctx.author).manage_messages:
+            await ctx.reply("Insufficient permissions to unlock channel.")
+            return
         if channel in ctx.guild.channels:
             lock = ctx.db.locks.find_by_id(channel.id)
             await channel.set_permissions(
