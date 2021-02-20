@@ -44,23 +44,19 @@ automatically create the needed database.
 
 1. Create a new branch for your feature: `git checkout -b just-write-stuff-into-here`. This allows
 you to develop your feature concurrently to others working on other things.
-2. Make whatever changes you think appropriate. If you need help with something while making the
-changes, don't hesitate to ask in the support server or the issue you're working on! When you save
-your changes, use `Ctrl-C` in your development shell to stop the bot and repeat `python -m fuzzy` to
-restart it with your changes applied.
-3. Once your changes are complete, run `isort fuzzy` and `black fuzzy` in your development shell to
+2. Once your changes are complete, run `isort fuzzy` and `black fuzzy` in your development shell to
 format the codebase, followed by `pylint fuzzy` to see potential issues with your code. Once happy
 with the results, stage your changes with git: `git add src/file1 src/file2 src/file_n` and commit
 them: `git commit`. Please don't alter the version number of Fuzzy, we'll change it after the merge
 is done.
-4. Push your work to your fork: `git push origin the-previously-picked-branch-name`. Then, go to the
+3. Push your work to your fork: `git push origin the-previously-picked-branch-name`. Then, go to the
 [pull requests] page and click the button that should appear to create a pull request based on your
 recently pushed branch. Write a short summary of your changes; if you think something you've done
 warrants extra explanations, do so.
-7. Wait for a review. If you want to change more things in your branch, add more commits; don't edit
+4. Wait for a review. If you want to change more things in your branch, add more commits; don't edit
 your previous ones.
-8. Wait for your request to be merged into the `main` branch.
-9. Reset your working copy by checking out `main`: `git checkout main` and pulling from the main
+5. Wait for your request to be merged into the `main` branch.
+6. Reset your working copy by checking out `main`: `git checkout main` and pulling from the main
 repository: `git pull upstream main`.
 
 [discordpy]: https://github.com/Rapptz/discord.py/
