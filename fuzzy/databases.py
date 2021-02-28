@@ -795,10 +795,10 @@ class PublishedMessages(IPublishedMessages):
             published_ban.infraction_id, published_ban.publish_type
         )
 
-    def delete_with_type(self, infraction_id: int, infraction_type) -> None:
+    def delete_with_type(self, infraction_id: int, publish_type: PublishType) -> None:
         self.conn.execute(
-            "DELETE FROM published_messages WHERE infraction_id=:infraction_id AND infraction_type=:infraction_type",
-            {"infraction_id": infraction_id, "infraction_type": infraction_type},
+            "DELETE FROM published_messages WHERE infraction_id=:infraction_id AND publish_type=:publish_type",
+            {"infraction_id": infraction_id, "publish_type": publish_type.value},
         )
         self.conn.commit()
 

@@ -26,14 +26,10 @@ class InfractionAdmin(Fuzzy.Cog):
         infraction: Infraction = ctx.db.infractions.find_by_id(
             infraction_id, ctx.guild.id
         )
-        if infraction:
-            infraction.pardon.reason = reason
-        else:
-            all_errors.append(f"{infraction_id}")
         if not infraction:
             raise UnableToComply("Could not find any Infractions with those IDs.")
-
-        pardoned = None
+        if infraction.pardon:
+            infraction.pardon.reason = reason
         if (
             infraction.infraction_type.value == InfractionType.BAN.value
             and infraction.published_unban
@@ -53,27 +49,27 @@ class InfractionAdmin(Fuzzy.Cog):
                     infraction.id, infraction.published_unban.publish_type
                 )
                 infraction.published_ban = None
-
+        pardon = infraction.pardon
+        if not pardon:
             pardon = Pardon(
                 infraction.id,
                 DBUser(ctx.author.id, f"{ctx.author.name}#{ctx.author.discriminator}"),
                 datetime.utcnow(),
                 reason,
             )
-            pardon = ctx.db.pardons.save(pardon)
-            if pardon:
-                infraction.pardon = pardon
-                pardoned = infraction
-            else:
-                all_errors.append(infraction.id)
+        pardon = ctx.db.pardons.save(pardon)
+        if pardon:
+            infraction.pardon = pardon
+        else:
+            all_errors.append(str(infraction.id))
         if all_errors:
             msg = ""
             if all_errors:
                 msg += "Error Processing Pardons: " + " ".join(all_errors)
             await ctx.reply(msg, color=ctx.Color.I_GUESS)
 
-        if pardoned:
-            msg = "**ID:** {infraction.id} **User:** {infraction.user.name}"
+        if pardon:
+            msg = f"**ID:** {infraction.id} **User:** {infraction.user.name}"
             await ctx.reply(title="Pardoned", msg=msg, color=ctx.Color.GOOD)
             await self.bot.post_log(
                 ctx.guild,
