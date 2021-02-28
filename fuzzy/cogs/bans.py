@@ -1,6 +1,6 @@
 import asyncio
 import typing
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Optional
 
 import discord
@@ -17,24 +17,33 @@ class Bans(Fuzzy.Cog):
         infraction log."""
         await asyncio.sleep(0.5)
 
-        infraction = self.bot.db.infractions.find_recent_ban_by_id(user.id, guild.id)
-
+        infraction = self.bot.db.infractions.find_recent_ban_by_id_time_limited(user.id, guild.id)
         if not infraction:
-            # noinspection PyTypeChecker
-            infraction = self.bot.db.infractions.save(
-                Infraction(
-                    None,
-                    DBUser(user.id, f"{user.name}#{user.discriminator}"),
-                    DBUser(0, "Unknown#????"),
-                    self.bot.db.guilds.find_by_id(guild.id),
-                    "",
-                    datetime.utcnow(),
-                    InfractionType.BAN,
-                    None,
-                    None,
-                    None,
-                )
-            )
+            async for entry in guild.audit_logs(limit=10,
+                                                oldest_first=False,
+                                                after=(datetime.utcnow() - timedelta(minutes=1)),
+                                                action=discord.AuditLogAction.ban):
+                if entry.target.id == user.id:
+
+                    # noinspection PyTypeChecker
+                    mod = DBUser(0, "Unknown#????")
+                    if not entry.user.bot:
+                        mod = DBUser(entry.user.id, f"{entry.user.name}#{entry.user.discriminator}")
+                    infraction = self.bot.db.infractions.save(
+                        Infraction(
+                            None,
+                            DBUser(user.id, f"{user.name}#{user.discriminator}"),
+                            mod,
+                            self.bot.db.guilds.find_by_id(guild.id),
+                            f"{entry.reason}",
+                            datetime.utcnow(),
+                            InfractionType.BAN,
+                            None,
+                            None,
+                            None,
+                        )
+                    )
+                    break
         msg = (
             f"**Banned:** {infraction.user.name} (ID {infraction.user.id})\n"
             f"**Mod:** <@{infraction.moderator.id}>\n"
@@ -73,50 +82,44 @@ class Bans(Fuzzy.Cog):
     async def ban(
         self,
         ctx: Fuzzy.Context,
-        who: commands.Greedy[typing.Union[discord.Member, discord.User]],
+        who: typing.Union[discord.Member, discord.User],
         *,
         reason: Optional[str] = "",
     ):
         """Bans a user from the server.
         `who` is a space-separated list of users. This can be mentions, ids or names.
         `reason` is the reason for the ban. This can be updated later with ${pfx}reason"""
-        banned_users = []
+        infraction = None
         insufficient_permissions = []
-        for user in who:  # type: discord.User
-            if await self.check_if_can_ban(user):
-                if user.id != ctx.author.id:
-                    infraction = Infraction.create(
-                        ctx, user, reason, InfractionType.BAN
-                    )
-                    infraction = ctx.db.infractions.save(infraction)
-                    if infraction:
-                        banned_users.append(
-                            f"{infraction.user.name}: Ban ID {infraction.id}"
-                        )
-                        try:
-                            await self.bot.direct_message(
-                                user,
-                                title=f"Ban ID {infraction.id}",
-                                msg=f"You have been banned from {ctx.guild.name} "
-                                + (f'for "{reason}"' if reason else ""),
-                            )
-                        except discord.Forbidden or discord.HTTPException:
-                            pass
+        if await self.check_if_can_ban(who):
+            if who.id != ctx.author.id:
+                infraction = Infraction.create(
+                    ctx, who, reason, InfractionType.BAN
+                )
+                infraction = ctx.db.infractions.save(infraction)
+                if infraction:
                     try:
-                        await ctx.guild.ban(user, reason=reason, delete_message_days=0)
-                    except discord.Forbidden:
+                        await self.bot.direct_message(
+                            who,
+                            title=f"Ban ID {infraction.id}",
+                            msg=f"You have been banned from {ctx.guild.name} "
+                            + (f'for "{reason}"' if reason else ""),
+                        )
+                    except discord.Forbidden or discord.HTTPException:
                         pass
+                try:
+                    await ctx.guild.ban(who, reason=reason, delete_message_days=0)
+                except discord.Forbidden:
+                    pass
 
-                else:
-                    await ctx.reply("You cant ban yourself.")
             else:
-                insufficient_permissions.append(user)
-
-        ban_string = "\n".join(banned_users)
-        if banned_users:
+                await ctx.reply("You cant ban yourself.")
+        else:
+            insufficient_permissions.append(who)
+        if infraction:
             await ctx.reply(
                 title="Banned",
-                msg=(f"**Reason:** {reason}\n" if reason else "") + f"{ban_string}",
+                msg=(f"**Reason:** {reason}\n" if reason else "") + f"{infraction.user.name}: Ban ID {infraction.id}",
                 color=ctx.Color.BAD,
             )
         if insufficient_permissions:
@@ -132,26 +135,37 @@ class Bans(Fuzzy.Cog):
         do that.
         `who` is a space-separated list of users. This can be mentions, ids or names."""
         unbanned_users = []
+        errors = []
         for user in who:  # type: discord.User
-            await ctx.guild.unban(user)
-            infraction = ctx.db.infractions.find_recent_ban_by_id(user.id, ctx.guild.id)
-            if infraction:
-                unbanned_users.append(f"{infraction.user.name}: Ban ID {infraction.id}")
-                try:
-                    await self.bot.direct_message(
-                        user,
-                        title=f"Unban ID {infraction.id}",
-                        msg=f"You have been unbanned from {ctx.guild.name}",
-                    )
-                except discord.Forbidden or discord.HTTPException:
-                    pass
+            try:
+                await ctx.guild.unban(user)
+            except discord.NotFound or discord.HTTPException:
+                errors.append(user)
+            else:
+                infraction = ctx.db.infractions.find_recent_ban_by_id(user.id, ctx.guild.id)
+                if infraction:
+                    unbanned_users.append(f"{infraction.user.name}: Ban ID {infraction.id}")
+                    try:
+                        await self.bot.direct_message(
+                            user,
+                            title=f"Unban ID {infraction.id}",
+                            msg=f"You have been unbanned from {ctx.guild.name}",
+                        )
+                    except discord.Forbidden or discord.HTTPException:
+                        pass
 
-        unban_string = "\n".join(unbanned_users)
-        await ctx.reply(
-            title="Unbanned",
-            msg=f"{unban_string}",
-            color=ctx.Color.GOOD,
-        )
+        if errors:
+            msg = ""
+            for user in errors:
+                msg += f"{user.mention} "
+            await ctx.reply(f"Error unbanning the following users: {msg}")
+        if unbanned_users:
+            unban_string = "\n".join(unbanned_users)
+            await ctx.reply(
+                title="Unbanned",
+                msg=f"{unban_string}",
+                color=ctx.Color.GOOD,
+            )
 
     async def check_if_can_ban(
         self, member: typing.Union[discord.Member, discord.User]

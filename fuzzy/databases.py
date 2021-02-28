@@ -188,6 +188,38 @@ class Infractions(IInfractions):
             else None
         )
 
+    def find_recent_ban_by_id_time_limited(self, user_id, guild_id) -> Infraction:
+        infraction = None
+        infraction_on = datetime.utcnow() - timedelta(minutes=1)
+        try:
+            infraction = self.conn.execute(
+                "SELECT * FROM infractions WHERE user_id=:user_id "
+                "AND guild_id=:guild_id AND DATETIME(infraction_on) > :infraction_on",
+                {"user_id": user_id, "guild_id": guild_id, "infraction_on": infraction_on},
+            ).fetchone()
+        except sqlite3.DatabaseError:
+            pass
+        return (
+            Infraction(
+                infraction["oid"],
+                DBUser(infraction["user_id"], infraction["user_name"]),
+                DBUser(infraction["moderator_id"], infraction["moderator_name"]),
+                self.db.guilds.find_by_id(guild_id),
+                infraction["reason"],
+                infraction["infraction_on"],
+                InfractionType(infraction["infraction_type"]),
+                self.db.pardons.find_by_id(infraction["oid"]),
+                self.db.published_messages.find_by_id_and_type(
+                    infraction["oid"], PublishType.BAN
+                ),
+                self.db.published_messages.find_by_id_and_type(
+                    infraction["oid"], PublishType.UNBAN
+                ),
+            )
+            if infraction
+            else None
+        )
+
     def find_all_for_user(self, user_id: int, guild_id: int) -> List[Infraction]:
         expired_time = self.db.guilds.find_by_id(guild_id).infraction_expired_time()
 
