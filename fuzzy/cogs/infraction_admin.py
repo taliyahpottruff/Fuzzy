@@ -166,7 +166,7 @@ class InfractionAdmin(Fuzzy.Cog):
                 infraction.published_ban = None
 
         if infraction:
-            msg = "**ID:** {infraction.id} **User:** {infraction.user.name}"
+            msg = f"**ID:** {infraction.id} **User:** {infraction.user.name}"
             await ctx.reply(f"Updated Reason to '{reason}' for: \n{msg}")
             await self.bot.post_log(
                 ctx.guild,
