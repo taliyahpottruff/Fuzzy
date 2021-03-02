@@ -113,27 +113,27 @@ class Mutes(Fuzzy.Cog):
                         error_sending_dm.append(member)
             else:
                 await ctx.reply("You cant mute yourself.")
-
-        mute_string = "\n".join(muted_members)
-        await ctx.reply(
-            title="Mute",
-            msg=(f"**Reason:** {reason}\n" if reason else "")
-            + f"**Length:** {time}\n{mute_string}",
-            color=ctx.Color.BAD,
-        )
         if error_sending_dm:
             await ctx.reply(
                 f"Could not send direct message to the following users: "
                 f"{' '.join(member.mention for member in error_sending_dm)}"
             )
-        await self.bot.post_log(
-            ctx.guild,
-            title="Mute",
-            msg=f"**Mod:** {ctx.author.name}#{ctx.author.discriminator}\n"
-            + (f"**Reason:** {reason}\n" if reason else "")
-            + f"**Length:** {time}\n{mute_string}",
-            color=ctx.Color.BAD,
-        )
+        if muted_members:
+            mute_string = "\n".join(muted_members)
+            await ctx.reply(
+                title="Mute",
+                msg=(f"**Reason:** {reason}\n" if reason else "")
+                + f"**Length:** {time}\n{mute_string}",
+                color=ctx.Color.BAD,
+            )
+            await self.bot.post_log(
+                ctx.guild,
+                title="Mute",
+                msg=f"**Mod:** {ctx.author.name}#{ctx.author.discriminator}\n"
+                + (f"**Reason:** {reason}\n" if reason else "")
+                + f"**Length:** {time}\n{mute_string}",
+                color=ctx.Color.BAD,
+            )
 
     @commands.command()
     @commands.has_guild_permissions(manage_messages=True)
@@ -176,12 +176,12 @@ class Mutes(Fuzzy.Cog):
             msg += f"Could not find active mutes for: {' '.join(all_errors)}\n"
         if unmuted_members:
             msg += f"Unmuted the following users: {' '.join(unmuted_members)}"
-        await ctx.reply(msg)
-        await self.bot.post_log(
-            ctx.guild,
-            msg=f"{ctx.author.mention} " f"unmuted {' '.join(unmuted_members)}",
-            color=ctx.Color.AUTOMATIC_BLUE,
-        )
+            await ctx.reply(msg)
+            await self.bot.post_log(
+                ctx.guild,
+                msg=f"{ctx.author.mention} " f"unmuted {' '.join(unmuted_members)}",
+                color=ctx.Color.AUTOMATIC_BLUE,
+            )
 
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member):

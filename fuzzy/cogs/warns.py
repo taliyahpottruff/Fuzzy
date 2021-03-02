@@ -37,7 +37,6 @@ class Warns(Fuzzy.Cog):
                 except discord.Forbidden or discord.HTTPException:
                     await ctx.reply(
                         f"Could not send direct message to {who.mention}")
-                    return
         else:
             await ctx.reply("You cant warn yourself.")
 
