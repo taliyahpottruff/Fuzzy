@@ -6,3 +6,4 @@ from .logs import Logs
 from .mutes import Mutes
 from .purge import Purges
 from .warns import Warns
+from .learns import Learns

@@ -49,6 +49,7 @@ for cog in [
     cogs.Logs,
     cogs.Purges,
     cogs.Admin,
+    cogs.Learns,
 ]:
     bot.add_cog(cog(bot))
 
